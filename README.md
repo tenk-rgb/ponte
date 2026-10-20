@@ -15,11 +15,11 @@ Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domín
 
 ## Visual
 
-Preto e cinza, como o X e o ChatGPT: fundo preto no tema escuro e branco no claro, superfícies em cinza, botão principal invertido e verde só para o que está vivo (máquina respondendo, agente rodando). Os detalhes vêm de placa de circuito: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. Os ícones são do Lucide. No Início, o painel Rede mostra o tempo de resposta de cada máquina em milissegundos. O Quadro é um painel de controle: tudo o que dá para abrir fica numa faixa, e cada sessão aberta vira um bloco ao vivo com um gráfico de atividade. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
+Preto e cinza, como o X e o ChatGPT: fundo preto no tema escuro e branco no claro, superfícies em cinza, botão principal invertido e verde só para o que está vivo (máquina respondendo, agente rodando). Os detalhes vêm de placa de circuito: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. Os ícones das máquinas, dos agentes e das telas são um conjunto próprio em SVG (`design/icons`), com o canto chanfrado e o losango do app; as ações genéricas usam o Lucide. No Início, o painel Rede mostra o tempo de resposta de cada máquina em milissegundos. O Quadro é um painel de controle: tudo o que dá para abrir fica numa faixa, e cada sessão aberta vira um bloco ao vivo com um gráfico de atividade. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.4.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.5.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 

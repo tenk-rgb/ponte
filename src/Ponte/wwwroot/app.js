@@ -28,11 +28,14 @@ function h(tag, attrs, ...kids) {
 }
 
 import { ICONS } from './icons.js';
+import { PONTE_ICONS } from './icons-ponte.js';
+// Ponte's own set wins; Lucide fills the generic actions. Old names map onto the set.
+const ICON_ALIAS = { monitor: 'pc', laptop: 'pc', cpu: 'chip', bot: 'agent', term: 'terminal', folder: 'files', grid: 'board' };
 
 function icon(name, size = 16) {
   return h('span', {
     class: 'ic', 'aria-hidden': 'true',
-    html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`,
+    html: `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${PONTE_ICONS[ICON_ALIAS[name] || name] || ICONS[name] || ''}</svg>`,
   });
 }
 
@@ -223,7 +226,7 @@ function buildHome() {
     h('div', { class: 'home-main' },
       h('div', { class: 'hero' },
         h('h1', null, 'Conectar'),
-        h('label', { class: 'connect' }, icon('search', 20), home.input, h('kbd', null, 'Enter')),
+        h('label', { class: 'connect' }, icon('link', 20), home.input, h('kbd', null, 'Enter')),
         home.hint),
       home.list),
     home.side));
@@ -246,9 +249,9 @@ function s(tag, attrs, ...kids) {
 const isUp = id => (reach.get(id) ?? -1) >= 0;
 
 function machineIcon(c) {
-  if (c.os === 'windows') return 'monitor';
-  if (/raspberry|pi\b|arduino|esp/i.test(c.name)) return 'cpu';
-  return hasDesktop(c) ? 'laptop' : 'server';
+  if (c.os === 'windows') return 'pc';
+  if (/raspberry|pi\b|arduino|esp/i.test(c.name)) return 'chip';
+  return hasDesktop(c) ? 'pc' : 'server';
 }
 
 function reachList() {
@@ -371,7 +374,7 @@ function connActions(c, small = true) {
     onclick: e => { e.stopPropagation(); openConn(c.id, view); },
   }, icon(ic, 16));
   const out = [];
-  if (hasDesktop(c)) out.push(b('monitor', 'Tela', 'desktop'));
+  if (hasDesktop(c)) out.push(b('screen', 'Tela', 'desktop'));
   if (hasShell(c)) out.push(b('term', 'Terminal', 'term'), b('folder', 'Arquivos', 'files'));
   out.push(h('button', { class: 'btn ghost icon small', title: 'Editar', 'aria-label': `Editar ${c.name}`, onclick: e => { e.stopPropagation(); editConnection(c); } }, icon('edit', 16)));
   return out;
@@ -402,7 +405,7 @@ function renderHome() {
         h('div', { class: 'top' }, stateMark(c), c.os === 'windows' ? 'Windows' : 'Linux', h('span', { style: { marginLeft: 'auto' } }, timeAgo(c.lastUsed))),
         h('div', { class: 'name' }, c.name),
         h('div', { class: 'sub' }, c.user ? `${c.user}@${c.host}` : c.host),
-        h('div', { class: 'go' }, hasDesktop(c) ? icon('monitor', 16) : icon('term', 16), hasDesktop(c) ? 'Abrir a tela' : 'Abrir o terminal'))))));
+        h('div', { class: 'go' }, hasDesktop(c) ? icon('screen', 16) : icon('terminal', 16), hasDesktop(c) ? 'Abrir a tela' : 'Abrir o terminal'))))));
   }
 
   // all connections
@@ -468,7 +471,7 @@ function createConnWs(c) {
     active: null, term: null, rdp: null, vnc: null, files: { path: '', items: [], sel: null },
   };
   const views = [];
-  if (hasDesktop(c)) views.push(['desktop', 'monitor', 'Tela']);
+  if (hasDesktop(c)) views.push(['desktop', 'screen', 'Tela']);
   if (hasShell(c)) views.push(['term', 'term', 'Terminal'], ['files', 'folder', 'Arquivos']);
 
   ws.seg = h('div', { class: 'seg' }, views.map(([v, ic, label]) =>
@@ -1016,7 +1019,7 @@ function launchables() {
   const out = [];
   for (const c of S.connections) if (!workspaces.some(w => w.connId === c.id))
     out.push({ kind: 'conn', id: c.id, name: c.name, sub: c.user ? `${c.user}@${c.host}` : c.host,
-      ic: c.os === 'windows' ? 'monitor' : hasDesktop(c) ? 'monitor' : 'server', on: isUp(c.id), run: () => openIntoBoard(() => openConn(c.id)) });
+      ic: machineIcon(c), on: isUp(c.id), run: () => openIntoBoard(() => openConn(c.id)) });
   for (const a of S.agents) if (!workspaces.some(w => w.agentId === a.id))
     out.push({ kind: 'agent', id: a.id, name: a.name, sub: a.command, ic: 'bot', on: null, run: () => openIntoBoard(() => openAgent(a.id)) });
   return out;
@@ -1089,7 +1092,7 @@ function renderBoard() {
       const since = it.ws.since ? Math.round((Date.now() - it.ws.since) / 60000) : 0;
       body.append(h('div', { class: 'tile-desk' + (ended ? '' : ' live'), onclick: takeOver },
         h('div', { class: 'box' },
-          h('span', { class: 'big' }, icon('monitor', 26)),
+          h('span', { class: 'big' }, icon('screen', 26)),
           h('b', null, ended ? 'Sessão encerrada' : 'Área de trabalho ao vivo'),
           h('small', null, ended ? 'Clique para reconectar.' : `${where}${since ? `, aberta há ${since} min` : ''}. A tela remota só aparece na aba dela.`),
           h('span', { class: 'btn small' }, icon('maximize', 14), ended ? 'Abrir' : 'Assumir'))));
@@ -1384,7 +1387,7 @@ function palette() {
   let items = [], sel = 0;
 
   const all = () => [
-    ...S.connections.map(c => ({ ic: c.os === 'windows' ? 'monitor' : 'term', title: c.name, sub: c.host, keys: `${c.name} ${c.host} ${c.group} ${c.user}`, run: () => openConn(c.id) })),
+    ...S.connections.map(c => ({ ic: machineIcon(c), title: c.name, sub: c.host, keys: `${c.name} ${c.host} ${c.group} ${c.user}`, run: () => openConn(c.id) })),
     ...S.connections.filter(hasShell).map(c => ({ ic: 'folder', title: `Arquivos de ${c.name}`, sub: c.host, keys: `arquivos files sftp ${c.name} ${c.host}`, run: () => openConn(c.id, 'files') })),
     ...S.agents.map(a => ({ ic: 'bot', title: a.name, sub: a.command, keys: `agente ${a.name} ${a.command}`, run: () => openAgent(a.id) })),
     ...workspaces.map(ws => ({ ic: 'enter', title: `Ir para ${ws.title}`, sub: 'aba aberta', keys: `aba ${ws.title}`, run: () => go(ws.id) })),
