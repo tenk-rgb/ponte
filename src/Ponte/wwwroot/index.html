@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ponte</title>
+  <link rel="stylesheet" href="vendor/xterm/xterm.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="vendor/xterm/xterm.js"></script>
+  <script src="vendor/xterm/addon-fit.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <div class="brand" title="Ponte"><img src="icon.png" alt=""></div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="bar-actions">
+      <button class="btn ghost search-btn" id="btn-search" title="Buscar (Ctrl+K)">
+        <span data-icon="search"></span><span class="label">Buscar</span><kbd>Ctrl K</kbd>
+      </button>
+      <button class="btn icon ghost" id="btn-voice" title="Falar para o terminal"><span data-icon="mic"></span></button>
+      <button class="btn icon ghost" id="btn-settings" title="Ajustes"><span data-icon="gear"></span></button>
+      <button class="btn primary" id="btn-new"><span data-icon="plus"></span><span class="label">Nova</span></button>
+    </div>
+  </header>
+
+  <main id="views">
+    <section class="view home" id="view-home"></section>
+    <section class="view board" id="view-board" hidden></section>
+  </main>
+
+  <div class="toasts" id="toasts"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
