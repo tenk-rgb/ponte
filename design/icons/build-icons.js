@@ -6,8 +6,8 @@ const path = require('path');
 
 // body: the filled silhouette; line: stroked detail; dots: solid diamonds
 const ICONS = {
-  brand: { body: 'M3.5 18c1-7 3-10.5 4.5-10.5S11.5 11 12.5 18z M11.5 18c1-7 3-10.5 4.5-10.5S19.5 11 20.5 18z',
-           line: 'M3 18h18 M3.5 18c1-7 3-10.5 4.5-10.5S11.5 11 12.5 18 M11.5 18c1-7 3-10.5 4.5-10.5S19.5 11 20.5 18' },
+  // the mark: a deck over a pier block with the arch cut out, solid
+  brand: { solid: 'M2 6.5h20v3H2z M3 9.5h18V22H3z M5.5 22a6.5 6.5 0 0 1 13 0z' },
   pc: { body: 'M4 5h11l5 5v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z', line: 'M4 5h11l5 5v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M8 21h8 M12 18v3' },
   server: { body: 'M5 4h10l5 5v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z', line: 'M5 4h10l5 5v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M4 12h16',
             dots: ['M8 6.4 9.6 8 8 9.6 6.4 8z', 'M8 14.4 9.6 16 8 17.6 6.4 16z'] },
@@ -30,6 +30,7 @@ const ICONS = {
 function inner(name) {
   const i = ICONS[name];
   let out = '';
+  if (i.solid) return `<path d="${i.solid}" fill="currentColor" fill-rule="evenodd" stroke="none" />`;
   if (i.body) out += `<path d="${i.body}" fill="currentColor" fill-opacity=".22" stroke="none" />`;
   if (i.line) out += `<path d="${i.line}" />`;
   for (const d of i.dots || []) out += `<path d="${d}" fill="currentColor" stroke="none" />`;
