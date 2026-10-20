@@ -93,6 +93,14 @@ public sealed class MainForm : Form
         var env = await CoreWebView2Environment.CreateAsync(null, dataDir);
         await _web.EnsureCoreWebView2Async(env);
         var core = _web.CoreWebView2;
+        // after an update the WebView2 cache can still serve the old UI files
+        var stamp = Path.Combine(dataDir, "ui-version.txt");
+        var version = Application.ProductVersion;
+        if (!File.Exists(stamp) || File.ReadAllText(stamp) != version)
+        {
+            await core.Profile.ClearBrowsingDataAsync(CoreWebView2BrowsingDataKinds.DiskCache);
+            File.WriteAllText(stamp, version);
+        }
         var dev = Environment.GetEnvironmentVariable("PONTE_DEV") == "1";
         core.Settings.AreDevToolsEnabled = dev;
         core.Settings.AreDefaultContextMenusEnabled = dev;
