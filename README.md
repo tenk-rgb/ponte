@@ -15,11 +15,11 @@ Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domín
 
 ## Visual
 
-O desenho parte de Brasília: o azul dos azulejos de Athos Bulcão como cor principal, o cinza do concreto aparente no fundo, o amarelo do ipê para o que está rodando e os três arcos da Ponte JK no logo e na aba ativa. A fonte é a Gabarito, da Naipe Foundry do Rio de Janeiro (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
+O desenho mistura Mata Atlântica com placa de circuito. O fundo é verde-floresta, e o amarelo-maracujá marca o que está vivo: máquinas que respondem, agentes rodando e a ação principal. Os detalhes vêm de eletrônica: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. No Início, um mapa da rede mostra cada máquina ligada a "Este PC" e acende as que respondem. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.2.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.3.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 

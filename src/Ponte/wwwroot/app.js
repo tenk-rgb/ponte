@@ -244,17 +244,138 @@ function buildHome() {
     },
   });
   home.hint = h('p', { class: 'hint' });
-  const turns = [0, 1, 3, 2, 2, 3, 1, 0];   // fixed rotations, like a laid tile panel
   home.list = h('div');
+  home.side = h('aside', { class: 'home-side' });
   root.replaceChildren(h('div', { class: 'home-inner' },
-    h('div', { class: 'hero' },
-      h('h1', null, 'Conectar'),
-      h('div', { class: 'azulejo', 'aria-hidden': 'true' }, turns.map(t => h('i', { class: t ? `r${t}` : '' }))),
-      h('label', { class: 'connect' }, icon('search', 20), home.input, h('kbd', null, 'Enter')),
-      home.hint),
-    home.list));
+    h('div', { class: 'home-main' },
+      h('div', { class: 'hero' },
+        h('h1', null, 'Conectar'),
+        h('label', { class: 'connect' }, icon('search', 20), home.input, h('kbd', null, 'Enter')),
+        home.hint),
+      home.list),
+    home.side));
   homeBuilt = true;
 }
+
+// ----- side column: the network map and the agents -----
+
+const SVG = 'http://www.w3.org/2000/svg';
+function s(tag, attrs, ...kids) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v);
+  }
+  el.append(...kids.filter(Boolean));
+  return el;
+}
+
+// Traces leave the hub diagonally and finish straight, the way tracks run on a circuit board.
+function tracePath(x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const d = Math.min(Math.abs(dx), Math.abs(dy));
+  const mx = x1 + Math.sign(dx) * d, my = y1 + Math.sign(dy) * d;
+  return `M${x1},${y1} L${mx},${my} L${x2},${y2}`;
+}
+
+function netMap() {
+  const W = 320, H = 200, cx = W / 2, cy = H / 2;
+  const list = [...S.connections].sort((a, b) => (b.lastUsed || '').localeCompare(a.lastUsed || '')).slice(0, 10);
+  const extra = S.connections.length - list.length;
+  const svg = s('svg', { class: 'net', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Mapa das conexões a partir deste PC' });
+  const n = list.length;
+  const nodes = list.map((c, i) => {
+    const a = (-90 + (360 / Math.max(n, 1)) * i) * Math.PI / 180;
+    return { c, x: Math.round(cx + Math.cos(a) * 128), y: Math.round(cy + Math.sin(a) * 70) };
+  });
+  for (const { c, x, y } of nodes) {
+    const on = reach.get(c.id) === true;
+    const d = tracePath(cx, cy, x, y);
+    svg.append(s('path', { class: 'trace' + (on ? ' on' : ''), d }));
+    if (on && !matchMedia('(prefers-reduced-motion: reduce)').matches) svg.append(s('path', { class: 'pulse', d }));
+  }
+  for (const { c, x, y } of nodes) {
+    const on = reach.get(c.id) === true;
+    const label = c.name.length > 14 ? c.name.slice(0, 13) + '…' : c.name;
+    const below = y >= cy;
+    svg.append(s('g', {
+      class: 'node' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
+      onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter') openConn(c.id); },
+    },
+      s('rect', { x: x - 6, y: y - 6, width: 12, height: 12, rx: 2, transform: `rotate(45 ${x} ${y})` }),
+      s('text', { x, y: below ? y + 22 : y - 14, 'text-anchor': 'middle' }, document.createTextNode(label)),
+      s('title', null, document.createTextNode(`${c.name}, ${c.host}`))));
+  }
+  svg.append(s('g', { class: 'hub' },
+    s('rect', { x: cx - 8, y: cy - 8, width: 16, height: 16, rx: 2, transform: `rotate(45 ${cx} ${cy})` }),
+    s('text', { x: cx, y: cy + 26, 'text-anchor': 'middle' }, document.createTextNode('Este PC'))));
+  if (extra > 0) svg.append(s('text', { x: W - 4, y: H - 4, 'text-anchor': 'end', fill: 'currentColor', 'font-size': 11 }, document.createTextNode(`+${extra}`)));
+  return svg;
+}
+
+function lastLines(T, n = 3) {
+  const b = T.xterm.buffer.active;
+  const out = [];
+  for (let y = b.baseY + b.cursorY; y >= 0 && out.length < n; y--) {
+    const line = b.getLine(y)?.translateToString(true).trimEnd();
+    if (line) out.unshift(line);
+  }
+  return out.join('\n');
+}
+
+function agentTail(a) {
+  const ws = workspaces.find(w => w.agentId === a.id);
+  if (!ws?.term) return 'Parado. Clique para abrir.';
+  if (ws.term.ended) return 'Terminou. Clique para ver.';
+  return lastLines(ws.term) || 'Iniciando…';
+}
+
+function renderSide() {
+  const online = S.connections.filter(c => reach.get(c.id) === true).length;
+  const net = S.connections.length
+    ? h('section', { class: 'panel' },
+      h('div', { class: 'panel-head' }, h('h2', null, 'Rede'),
+        h('span', { class: 'hint' }, reach.size ? `${online} de ${S.connections.length} respondendo` : 'verificando…')),
+      netMap(),
+      h('div', { class: 'net-legend' },
+        h('span', null, h('i', { style: { background: 'var(--maracuja)' } }), 'respondendo'),
+        h('span', null, h('i', { style: { boxShadow: 'inset 0 0 0 1.5px var(--folha-4)' } }), 'sem resposta')))
+    : null;
+
+  const agents = S.agents.map(a => {
+    const ws = workspaces.find(w => w.agentId === a.id);
+    const live = ws?.term && !ws.term.ended;
+    const where = a.target === 'local' ? 'Este PC' : (conn(a.target)?.name || 'Conexão removida');
+    return h('div', {
+      class: 'agent' + (live ? ' live' : ''), tabindex: 0, role: 'button', 'aria-label': `Abrir ${a.name}`,
+      onclick: () => openAgent(a.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openAgent(a.id); },
+    },
+      h('div', { class: 't' }, h('span', { class: 'dot' + (live ? ' live' : '') }), a.name,
+        h('span', { class: 'st' }, live ? 'rodando' : 'parado'),
+        h('button', { class: 'btn ghost icon small edit', title: 'Editar', 'aria-label': `Editar ${a.name}`, onclick: e => { e.stopPropagation(); editAgent(a); } }, icon('edit', 14))),
+      h('div', { class: 'where' }, `${where}: ${a.command}`),
+      h('pre', { 'data-agent': a.id }, agentTail(a)));
+  });
+
+  home.side.replaceChildren(
+    net,
+    h('section', null,
+      h('div', { class: 'section-head' },
+        h('h2', null, 'Agentes'),
+        h('span', { class: 'spacer' }),
+        S.agents.length > 1 ? h('button', { class: 'btn ghost small', onclick: startAllAgents, title: 'Abrir todos no quadro' }, icon('play', 16), 'Todos') : null,
+        h('button', { class: 'btn small', onclick: () => editAgent() }, icon('plus', 16), 'Novo')),
+      S.agents.length ? h('div', { class: 'agents' }, agents)
+        : h('div', { class: 'empty-line' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal, no seu PC ou num servidor Linux.')));
+}
+
+// keep the agents' tails live while Início is on screen
+setInterval(() => {
+  if (route !== 'home' || document.hidden) return;
+  for (const pre of document.querySelectorAll('#view-home pre[data-agent]')) {
+    const a = agent(pre.dataset.agent);
+    if (a) { const t = agentTail(a); if (pre.textContent !== t) pre.textContent = t; }
+  }
+}, 1500);
 
 function filteredConnections() {
   return S.connections.filter(c => matches(c, homeQuery));
@@ -354,32 +475,8 @@ function renderHome() {
   }
   out.push(h('section', { class: 'section' }, head, body));
 
-  // agents
-  if (!q) {
-    const agentRows = S.agents.map(a => {
-      const ws = workspaces.find(w => w.agentId === a.id);
-      const running = ws?.term && !ws.term.ended;
-      const where = a.target === 'local' ? 'Este PC' : (conn(a.target)?.name || 'Conexão removida');
-      return h('div', { class: 'row', tabindex: 0, role: 'button', onclick: () => openAgent(a.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openAgent(a.id); } },
-        h('span', { class: 'dot' + (running ? ' live' : '') }),
-        h('div', { class: 'who' }, h('span', { class: 'name' }, a.name), h('span', { class: 'sub' }, a.command + (a.cwd ? ` em ${a.cwd}` : ''))),
-        h('span', { class: 'os' }, where),
-        h('span', { class: 'when' }, running ? 'Rodando' : 'Parado'),
-        h('div', { class: 'acts' },
-          h('button', { class: 'btn ghost icon small', title: 'Editar', 'aria-label': `Editar ${a.name}`, onclick: e => { e.stopPropagation(); editAgent(a); } }, icon('edit', 16))));
-    });
-    out.push(h('section', { class: 'section' },
-      h('div', { class: 'section-head' },
-        h('h2', null, 'Agentes'),
-        h('span', { class: 'hint' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal'),
-        h('span', { class: 'spacer' }),
-        S.agents.length > 1 ? h('button', { class: 'btn ghost small', onclick: startAllAgents }, icon('play', 16), 'Abrir todos no quadro') : null,
-        h('button', { class: 'btn small', onclick: () => editAgent() }, icon('plus', 16), 'Novo agente')),
-      S.agents.length ? h('div', { class: 'rows' }, agentRows)
-        : h('div', { class: 'empty-line' }, 'Nenhum agente ainda. Cada um roda no seu PC ou num servidor Linux.')));
-  }
-
   home.list.replaceChildren(...out);
+  renderSide();
 }
 
 async function probe() {
@@ -425,7 +522,7 @@ function createConnWs(c) {
   };
   ws.el = h('section', { class: 'ws', hidden: true },
     h('div', { class: 'ws-bar' },
-      h('span', { class: 'dot', style: { '--c': c.color || 'var(--tinta-4)' } }), ws.titleEl, ws.hostEl,
+      h('span', { class: 'dot', style: { '--c': c.color || 'var(--folha-4)' } }), ws.titleEl, ws.hostEl,
       views.length > 1 ? ws.seg : null,
       h('span', { class: 'spacer' }),
       ws.reconnectBtn,
@@ -500,13 +597,13 @@ function cssVar(name) { return getComputedStyle(document.documentElement).getPro
 function termTheme() {
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    background: cssVar('--terminal'), foreground: cssVar('--terminal-tinta'), cursor: cssVar('--azulejo'),
+    background: cssVar('--terminal'), foreground: cssVar('--terminal-tinta'), cursor: cssVar('--maracuja'),
     cursorAccent: cssVar('--terminal'),
-    selectionBackground: dark ? '#34405e' : '#c9d4f2',
-    black: dark ? '#1c2335' : '#14161a', brightBlack: dark ? '#4a5576' : '#6b6f76',
-    red: dark ? '#ff7a59' : '#c4401b', green: dark ? '#5fd39a' : '#237a50', yellow: dark ? '#f2c14e' : '#a87505',
-    blue: dark ? '#8fa8ff' : '#2747a6', magenta: dark ? '#d7a1ff' : '#8b3fb8', cyan: dark ? '#6fd6e6' : '#0e7490',
-    white: dark ? '#e2e6ee' : '#d9d7d1', brightWhite: '#f6f6f3',
+    selectionBackground: dark ? '#2a5a48' : '#cfe0d4',
+    black: dark ? '#143329' : '#0f2a22', brightBlack: dark ? '#4d6e60' : '#5a776c',
+    red: dark ? '#ff7a59' : '#c4401b', green: dark ? '#7fd8a4' : '#237a50', yellow: dark ? '#f2c230' : '#8a6700',
+    blue: dark ? '#7fb3ff' : '#1f5fae', magenta: dark ? '#e08ad8' : '#9b3c8f', cyan: dark ? '#5fd1c8' : '#0e7470',
+    white: dark ? '#d9e6dc' : '#dfe8e1', brightWhite: '#f6f9f6',
   };
 }
 
@@ -929,7 +1026,7 @@ function renderBoard() {
     const where = it.ws.connId ? (conn(it.ws.connId)?.host || '') : (it.ws.subtitle || '');
     tiles.append(h('div', { class: 'tile' },
       h('div', { class: 'tile-head', ondblclick: takeOver },
-        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--tinta-4)' : (it.ws.color || '') } }),
+        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--folha-4)' : (it.ws.color || '') } }),
         h('span', { class: 'name' }, it.ws.title),
         h('span', { class: 'where' }, it.kind === 'desktop' ? 'tela' : where),
         h('span', { class: 'spacer' }),
@@ -1019,7 +1116,7 @@ function confirmBox(title, text, okLabel = 'Confirmar') {
   return new Promise(resolve => {
     let done = false;
     const finish = v => { if (done) return; done = true; resolve(v); close(); };
-    const close = modal(title, h('div', { style: { color: 'var(--tinta-2)' } }, text), [
+    const close = modal(title, h('div', { style: { color: 'var(--folha-2)' } }, text), [
       h('span', { class: 'spacer' }),
       h('button', { class: 'btn', onclick: () => finish(false) }, 'Cancelar'),
       h('button', { class: 'btn primary', onclick: () => finish(true) }, okLabel)]);

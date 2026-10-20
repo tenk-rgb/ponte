@@ -1,28 +1,33 @@
 # Ponte design system
 
 ## Direction
-Brasília modernism. Athos Bulcão azulejo blue, exposed concrete, ipê yellow for live things, and the three Ponte JK arches. Calm and precise, like a control desk at night. The person is a power user connecting to home and work machines and watching AI agents, often in a hurry between other things.
+Mata Atlântica meets circuit board. The canvas is forest green, and maracujá yellow marks anything alive (online, running, the action you can take). The tech motif replaces leaves: cut corners (chamfers) on things you act on, diamond LEDs for status, and lit traces with a node for the active tab. The person is a power user jumping into work and home machines and watching AI agents. The direction was chosen by the user (option C) on 2026-10-19 after rejecting two dark-navy versions.
 
-## Focal pattern
-Each view has one focal element. On Início it is the "Conectar" field (56px, 18px text). It searches, filters the list, and connects on Enter. An unknown address opens the new-connection form already filled in. Recents (at most 3) are the second tier. Everything else is a dense row list.
+## Signature
+The network map on Início. "Este PC" is the hub, and every saved connection is a diamond node reached by a PCB-style trace that leaves diagonally and ends straight. Nodes whose port answered are lit maracujá, with a pulse running along the trace; clicking a node connects. It shows real reachability data.
+
+## Layout
+Início has two columns: main 1.45fr, side min 300px; they stack under 1000px. The main column holds "Conectar" (44px/800, the focal point), the connect field, recents (3 at most) and the dense row list. The side column, sticky, holds the Rede panel and the Agentes cards, each with a live tail of the last 3 terminal lines (refreshed every 1.5s while Início is visible).
 
 ## Tokens (app.css)
-- Surfaces: `--concreto` canvas → `--papel` (+1 step) → `--papel-alto` (floating). Inputs use `--concreto-fundo` (inset, darker).
-- Text, 4 steps: `--tinta`, `--tinta-2`, `--tinta-3`, `--tinta-4`.
+- Surfaces: `--mata` canvas → `--copa` (+1) → `--copa-alta` (floating). `--mata-fundo` is the inset for inputs. `--terminal` is darker than the cards in both themes.
+- Text, 4 steps: `--folha`, `--folha-2`, `--folha-3`, `--folha-4`.
 - Lines: `--linha` / `--linha-forte`, low-opacity rgba, drawn as inset box-shadows.
-- One accent: `--azulejo` (action, focus, selection). `--ipe` means running now, `--mata` means online, `--urucum` means destructive. Nothing else gets color.
+- One accent: `--maracuja` (#f2c230 dark; #a27a00 light so text stays readable). `--sinal` means a port answered (same hue). `--urucum` is destructive.
+- `--chanfro: 10px` is the cut corner, applied through `clip-path`. Never put an outer ring on a chamfered element; use a surface step or an inset focus.
 
 ## Type
-Gabarito (Naipe Foundry, Rio), variable 400–900. Never enable `ss01`: it turns digits into circled numbers. Scale 1.25 from 14: 12 · 14 · 16 · 18 · 22 · 28. Tiers come from weight (750/700/650/600/500) plus the text steps, not size alone. Negative tracking on headings ≥ 16px. Terminals use Cascadia Mono.
+Bricolage Grotesque, variable (opsz, wdth, wght), bundled in `wwwroot/fonts`. Scale 1.25 from 14: 12 · 14 · 16 · 18 · 22 · 28 · 44. Tiers come from weight (800/700/650/600/500) plus the text steps. Display headings use `opsz 96` and -0.035em tracking. Terminals use Cascadia Mono.
 
 ## Space, radius, depth
-- Spacing: 4px grid (4, 8, 12, 16, 24, 32, 40, 48, 64).
-- Radius: 4 tiles · 6–8 controls · 10 rows/segmented · 12 cards and tiles · 14 connect field · 16 modals. Nested radii are concentric (segmented 10 = 8 + 2 padding).
-- Depth: lines plus one-step surface shifts. Shadows (`--flutua`) only on things that float: modal, palette, toast.
+- Spacing: 4px grid.
+- Shape: chamfers on interactive surfaces (connect 14px, panel 16px, cards 10px). Plain 8px radius on rows and buttons; segmented control 10 outer and 8 inner.
+- Depth: surface steps plus low-opacity lines. Shadows (`--flutua`) only on modal, palette and toast.
 
 ## Components
-- Button: 36px tall (32 small), 16px horizontal padding (12 small), radius 8, weight 600, `scale(.97)` on press. Primary is azulejo fill; default is an inset `--linha-forte` ring; ghost turns azulejo-suave on hover.
-- Row: grid `20px 1fr 104px 96px 140px`, at least 52px tall, 1px `--linha` between rows, `--papel` on hover. The action column is fixed so columns align. Actions are ghost icon buttons (32px).
-- Status mark: a 14px color tile (leaf corner) with an 8px dot. Green = port answered, hollow = no answer, hidden = not checked yet. The check is a TCP connect every 30s while Início is visible.
-- Active tab: an arch (28×8, 2px azulejo) under the label. Window controls are 46px wide; close turns urucum on hover.
-- Motion: ease-out `cubic-bezier(.23,1,.32,1)`, 120–200ms, transform and opacity only. No animation on the palette or other keyboard-repeated actions.
+- Button: 36px tall (32 small), radius 8, weight 600, `scale(.97)` on press. Primary is a maracujá fill with `--maracuja-tinta` text.
+- Row: grid `16px 1fr 88px 140px`, at least 52px tall. The name sits over user@host. The action column is fixed.
+- Status LED: a 10px diamond. Lit maracujá with a soft halo = answered; outline = no answer; faint = not checked yet. The probe is a TCP connect every 30s on Início.
+- Active tab: a 2px maracujá trace with a 7px diamond node at the bottom edge.
+- Agent card: chamfered `--copa` card with a name, a status word (rodando/parado), "where: command", and a `pre` tail on `--terminal`.
+- Motion: ease-out `cubic-bezier(.23,1,.32,1)`, 120–200ms. The only ambient motion is the trace pulse, which is off under reduced motion.
