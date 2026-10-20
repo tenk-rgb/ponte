@@ -19,7 +19,7 @@ O desenho parte de Brasília: o azul dos azulejos de Athos Bulcão como cor prin
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.1.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.2.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 

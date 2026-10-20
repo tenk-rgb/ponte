@@ -176,6 +176,7 @@ function go(to) {
   $('#view-board').hidden = to !== 'board';
   for (const ws of workspaces) ws.el.hidden = ws.id !== to;
   if (to === 'board') renderBoard(); else returnTermsHome();
+  if (to === 'home') { renderHome(); probe(); }
   const ws = workspaces.find(w => w.id === to);
   if (ws) requestAnimationFrame(() => { fitVisible(ws); focusWs(ws); });
   renderTabs();
@@ -207,112 +208,190 @@ function renderTabs() {
 }
 
 // ---------------- home ----------------
+// Focal point: one field that searches, filters and connects. Below it, recents, then a dense list.
 
-let homeFilter = '';
+let homeQuery = '';
+const reach = new Map();          // connId -> true | false (port answered)
+let homeBuilt = false;
+const home = {};
+
+function timeAgo(iso) {
+  if (!iso) return 'nunca';
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 90) return 'agora';
+  if (s < 3600) return `há ${Math.round(s / 60)} min`;
+  if (s < 86400) return `há ${Math.round(s / 3600)} h`;
+  const d = Math.round(s / 86400);
+  return d === 1 ? 'ontem' : d < 30 ? `há ${d} dias` : new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+const looksLikeHost = q => /^[\w.-]+@[\w.-]+(:\d+)?$|^[\w-]+(\.[\w-]+)+(:\d+)?$|^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(q.trim());
+
+function matches(c, q) {
+  if (!q) return true;
+  const n = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return n(q).split(/\s+/).every(w => [c.name, c.host, c.user, c.group].some(v => n(v).includes(w)));
+}
+
+function buildHome() {
+  const root = $('#view-home');
+  home.input = h('input', {
+    placeholder: 'Nome, endereço ou usuario@servidor', spellcheck: 'false', 'aria-label': 'Conectar a',
+    oninput: e => { homeQuery = e.target.value; renderHome(); },
+    onkeydown: e => {
+      if (e.key === 'Enter') connectFromQuery();
+      if (e.key === 'Escape') { e.target.value = homeQuery = ''; renderHome(); }
+    },
+  });
+  home.hint = h('p', { class: 'hint' });
+  const turns = [0, 1, 3, 2, 2, 3, 1, 0];   // fixed rotations, like a laid tile panel
+  home.list = h('div');
+  root.replaceChildren(h('div', { class: 'home-inner' },
+    h('div', { class: 'hero' },
+      h('h1', null, 'Conectar'),
+      h('div', { class: 'azulejo', 'aria-hidden': 'true' }, turns.map(t => h('i', { class: t ? `r${t}` : '' }))),
+      h('label', { class: 'connect' }, icon('search', 20), home.input, h('kbd', null, 'Enter')),
+      home.hint),
+    home.list));
+  homeBuilt = true;
+}
+
+function filteredConnections() {
+  return S.connections.filter(c => matches(c, homeQuery));
+}
+
+function connectFromQuery() {
+  const q = homeQuery.trim();
+  const list = filteredConnections();
+  if (list.length && q) return openConn(list[0].id);
+  if (looksLikeHost(q)) return quickConnect(q);
+}
+
+// An address that isn't saved yet opens the new-connection form, already filled in.
+function quickConnect(q) {
+  let user = '', host = q;
+  if (q.includes('@')) [user, host] = q.split('@');
+  editConnection(null, { host, user, name: host });
+}
+
+function stateMark(c) {
+  const r = reach.get(c.id);
+  return h('span', {
+    class: 'state ' + (r === true ? 'on' : r === false ? 'off' : 'unknown'),
+    style: { '--c': c.color || '' },
+    title: r === true ? 'Respondendo' : r === false ? 'Não respondeu agora' : '',
+  });
+}
+
+function connActions(c, small = true) {
+  const b = (ic, label, view) => h('button', {
+    class: `btn ghost icon${small ? ' small' : ''}`, title: label, 'aria-label': `${label} de ${c.name}`,
+    onclick: e => { e.stopPropagation(); openConn(c.id, view); },
+  }, icon(ic, 16));
+  const out = [];
+  if (hasDesktop(c)) out.push(b('monitor', 'Tela', 'desktop'));
+  if (hasShell(c)) out.push(b('term', 'Terminal', 'term'), b('folder', 'Arquivos', 'files'));
+  out.push(h('button', { class: 'btn ghost icon small', title: 'Editar', 'aria-label': `Editar ${c.name}`, onclick: e => { e.stopPropagation(); editConnection(c); } }, icon('edit', 16)));
+  return out;
+}
 
 function renderHome() {
-  const root = $('#view-home');
-  const keepFocus = document.activeElement?.classList.contains('filter');
-  const q = homeFilter.trim().toLowerCase();
-  const match = c => !q || [c.name, c.host, c.user, c.group].some(v => v?.toLowerCase().includes(q));
-  const conns = S.connections.filter(match).sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
+  if (!homeBuilt) buildHome();
+  const q = homeQuery.trim();
+  const list = filteredConnections().sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
+  const live = [...sessions.values()].filter(s => !s.ended).length;
 
-  const filter = h('input', {
-    class: 'filter', placeholder: 'Filtrar conexões', value: homeFilter,
-    oninput: e => { homeFilter = e.target.value; renderHome(); },
-  });
+  // hint under the field says what Enter will do
+  home.hint.replaceChildren();
+  if (q && list.length) home.hint.append('Enter conecta a ', h('b', null, list[0].name), '.');
+  else if (q && looksLikeHost(q)) home.hint.append('Enter abre uma conexão nova com ', h('b', null, q), '.');
+  else if (q) home.hint.append('Nada salvo com esse nome.');
+  else if (S.connections.length) home.hint.append(`${S.connections.length} ${S.connections.length === 1 ? 'conexão salva' : 'conexões salvas'}` + (live ? `, ${live} ${live === 1 ? 'sessão aberta' : 'sessões abertas'}.` : '.'));
+  else home.hint.append('Digite um endereço para a primeira conexão, ou traga as do mRemoteNG.');
 
-  let connBody;
+  const out = [];
+
+  // recents: only when not searching
+  const recent = S.connections.filter(c => c.lastUsed).sort((a, b) => b.lastUsed.localeCompare(a.lastUsed)).slice(0, 3);
+  if (!q && recent.length) {
+    out.push(h('section', { class: 'section' },
+      h('div', { class: 'section-head' }, h('h2', null, 'Recentes')),
+      h('div', { class: 'recents' }, recent.map(c => h('button', { class: 'recent', onclick: () => openConn(c.id) },
+        h('div', { class: 'top' }, stateMark(c), c.os === 'windows' ? 'Windows' : 'Linux', h('span', { style: { marginLeft: 'auto' } }, timeAgo(c.lastUsed))),
+        h('div', { class: 'name' }, c.name),
+        h('div', { class: 'sub' }, c.user ? `${c.user}@${c.host}` : c.host),
+        h('div', { class: 'go' }, hasDesktop(c) ? icon('monitor', 16) : icon('term', 16), hasDesktop(c) ? 'Abrir a tela' : 'Abrir o terminal'))))));
+  }
+
+  // all connections
+  const head = h('div', { class: 'section-head' },
+    h('h2', null, q ? 'Resultados' : 'Todas as conexões'),
+    h('span', { class: 'spacer' }),
+    S.mremoteng && !S.connections.length ? h('button', { class: 'btn ghost small', onclick: importMremote }, icon('import', 16), 'Trazer do mRemoteNG') : null,
+    h('button', { class: 'btn small', onclick: () => editConnection() }, icon('plus', 16), 'Nova conexão'));
+  const body = [];
   if (!S.connections.length) {
-    connBody = h('div', { class: 'empty' },
-      h('div', null, 'Nenhuma conexão salva ainda.'),
-      h('div', { class: 'row' },
-        h('button', { class: 'btn primary', onclick: () => editConnection() }, icon('plus'), 'Nova conexão'),
-        S.mremoteng && h('button', { class: 'btn', onclick: importMremote }, icon('import'), 'Trazer do mRemoteNG')));
-  } else if (!conns.length) {
-    connBody = h('div', { class: 'empty' }, `Nada encontrado para "${homeFilter}".`);
+    body.push(h('div', { class: 'empty-line' }, 'Nenhuma conexão ainda. Uma conexão pede só endereço, usuário e senha.'));
+  } else if (!list.length) {
+    body.push(looksLikeHost(q)
+      ? h('div', { class: 'quick' }, icon('plus', 18), h('div', { class: 'txt' }, h('b', null, q), ' ainda não está salvo. O formulário abre com o endereço preenchido; falta a senha.'),
+        h('button', { class: 'btn primary small', onclick: () => quickConnect(q) }, 'Preencher conexão'))
+      : h('div', { class: 'empty-line' }, `Nenhuma conexão com "${q}".`));
   } else {
-    connBody = h('div');
-    const groups = Map.groupBy ? Map.groupBy(conns, c => c.group) : conns.reduce((m, c) => m.set(c.group, [...(m.get(c.group) || []), c]), new Map());
-    for (const [group, list] of groups) {
-      if (group) connBody.append(h('div', { class: 'group-label' }, group));
-      connBody.append(h('div', { class: 'grid' }, list.map(connCard)));
+    const groups = Map.groupBy(list, c => c.group);
+    for (const [group, items] of groups) {
+      if (group || groups.size > 1) body.push(h('div', { class: 'group-label' }, group || 'Sem grupo', h('span', null, items.length)));
+      body.push(h('div', { class: 'rows' }, items.map(c => h('div', {
+        class: 'row', tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
+        onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
+      },
+        stateMark(c),
+        h('div', { class: 'who' }, h('span', { class: 'name' }, c.name), h('span', { class: 'sub' }, c.user ? `${c.user}@${c.host}` : c.host)),
+        h('span', { class: 'os' }, (c.os === 'windows' ? 'Windows' : 'Linux') + (c.desktop === 'vnc' ? ', VNC' : '')),
+        h('span', { class: 'when' }, timeAgo(c.lastUsed)),
+        h('div', { class: 'acts' }, connActions(c))))));
     }
   }
+  out.push(h('section', { class: 'section' }, head, body));
 
-  const agentBody = S.agents.length
-    ? h('div', { class: 'grid' }, S.agents.map(agentCard))
-    : h('div', { class: 'empty' },
-      h('div', null, 'Coloque aqui o Claude Code, o Codex, o Gemini ou qualquer programa de terminal. Cada um roda no seu PC ou num servidor Linux.'),
-      h('div', { class: 'row' },
-        h('button', { class: 'btn primary', onclick: () => editAgent() }, icon('plus'), 'Novo agente')));
-
-  const running = [...sessions.values()].filter(s => !s.ended).length;
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  const summary = !S.connections.length && !S.agents.length
-    ? 'Salve uma máquina ou um agente para começar.'
-    : `${plural(S.connections.length, 'conexão', 'conexões')} e ${plural(S.agents.length, 'agente', 'agentes')}` +
-      (running ? `. ${plural(running, 'sessão aberta', 'sessões abertas')} agora.` : '.');
-  const turns = [0, 1, 3, 2, 0, 1, 2, 3, 1, 0, 2, 3];   // fixed rotations, like a laid tile panel
-  const hero = h('div', { class: 'hero' },
-    h('div', null, h('h1', null, 'Suas máquinas'), h('p', null, summary)),
-    h('div', { class: 'azulejo', 'aria-hidden': 'true' }, turns.map(t => h('i', { class: t ? `r${t}` : '' }))));
-
-  root.replaceChildren(h('div', { class: 'home-inner' },
-    hero,
-    h('div', { class: 'section' },
-      h('div', { class: 'section-head' },
-        h('h2', null, 'Conexões'),
-        S.connections.length ? h('span', { class: 'hint' }, S.connections.length) : null,
-        h('span', { class: 'spacer' }),
-        S.connections.length > 5 ? filter : null,
-        S.connections.length ? h('button', { class: 'btn', onclick: () => editConnection() }, icon('plus'), 'Nova conexão') : null),
-      connBody),
-    h('div', { class: 'section' },
+  // agents
+  if (!q) {
+    const agentRows = S.agents.map(a => {
+      const ws = workspaces.find(w => w.agentId === a.id);
+      const running = ws?.term && !ws.term.ended;
+      const where = a.target === 'local' ? 'Este PC' : (conn(a.target)?.name || 'Conexão removida');
+      return h('div', { class: 'row', tabindex: 0, role: 'button', onclick: () => openAgent(a.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openAgent(a.id); } },
+        h('span', { class: 'dot' + (running ? ' live' : '') }),
+        h('div', { class: 'who' }, h('span', { class: 'name' }, a.name), h('span', { class: 'sub' }, a.command + (a.cwd ? ` em ${a.cwd}` : ''))),
+        h('span', { class: 'os' }, where),
+        h('span', { class: 'when' }, running ? 'Rodando' : 'Parado'),
+        h('div', { class: 'acts' },
+          h('button', { class: 'btn ghost icon small', title: 'Editar', 'aria-label': `Editar ${a.name}`, onclick: e => { e.stopPropagation(); editAgent(a); } }, icon('edit', 16))));
+    });
+    out.push(h('section', { class: 'section' },
       h('div', { class: 'section-head' },
         h('h2', null, 'Agentes'),
-        h('span', { class: 'hint' }, 'IA e terminais que ficam rodando'),
+        h('span', { class: 'hint' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal'),
         h('span', { class: 'spacer' }),
-        S.agents.length > 1 ? h('button', { class: 'btn', onclick: startAllAgents }, icon('play'), 'Abrir todos no quadro') : null,
-        S.agents.length ? h('button', { class: 'btn', onclick: () => editAgent() }, icon('plus'), 'Novo agente') : null),
-      agentBody),
-  ));
-  if (keepFocus) { const f = $('.filter', root); f?.focus(); f?.setSelectionRange(f.value.length, f.value.length); }
-}
-
-function connCard(c) {
-  const actions = [];
-  if (hasDesktop(c)) actions.push(h('button', { class: 'btn', onclick: e => { e.stopPropagation(); openConn(c.id, 'desktop'); } }, icon('monitor', 14), 'Tela'));
-  if (hasShell(c)) {
-    actions.push(h('button', { class: 'btn', onclick: e => { e.stopPropagation(); openConn(c.id, 'term'); } }, icon('term', 14), 'Terminal'));
-    actions.push(h('button', { class: 'btn', onclick: e => { e.stopPropagation(); openConn(c.id, 'files'); } }, icon('folder', 14), 'Arquivos'));
+        S.agents.length > 1 ? h('button', { class: 'btn ghost small', onclick: startAllAgents }, icon('play', 16), 'Abrir todos no quadro') : null,
+        h('button', { class: 'btn small', onclick: () => editAgent() }, icon('plus', 16), 'Novo agente')),
+      S.agents.length ? h('div', { class: 'rows' }, agentRows)
+        : h('div', { class: 'empty-line' }, 'Nenhum agente ainda. Cada um roda no seu PC ou num servidor Linux.')));
   }
-  return h('div', {
-    class: 'card', tabindex: 0,
-    onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter') openConn(c.id); },
-    title: 'Clique para conectar',
-  },
-    h('div', { class: 'card-top' },
-      h('span', { class: 'chip-color', style: { '--c': c.color || '' } }),
-      h('span', { class: 'pill' }, (c.os === 'windows' ? 'Windows' : 'Linux') + (c.desktop === 'vnc' ? ', VNC' : '')),
-      h('span', { class: 'spacer' }),
-      h('button', { class: 'btn icon ghost edit', title: 'Editar', onclick: e => { e.stopPropagation(); editConnection(c); } }, icon('edit', 14))),
-    h('div', { class: 'card-name' }, c.name),
-    h('div', { class: 'card-sub' }, c.user ? `${c.user}@${c.host}` : c.host),
-    h('div', { class: 'card-actions' }, actions));
+
+  home.list.replaceChildren(...out);
 }
 
-function agentCard(a) {
-  const where = a.target === 'local' ? 'Este PC' : (conn(a.target)?.name || 'Conexão removida');
-  return h('div', {
-    class: 'card', tabindex: 0, onclick: () => openAgent(a.id), onkeydown: e => { if (e.key === 'Enter') openAgent(a.id); },
-    title: 'Clique para abrir',
-  },
-    h('div', { class: 'card-top' }, icon('bot', 14), h('span', null, where), h('span', { class: 'spacer' }),
-      h('button', { class: 'btn icon ghost edit', title: 'Editar', onclick: e => { e.stopPropagation(); editAgent(a); } }, icon('edit', 14))),
-    h('div', { class: 'card-name' }, a.name),
-    h('div', { class: 'card-sub' }, a.command + (a.cwd ? `  ·  ${a.cwd}` : '')));
+async function probe() {
+  if (!S.connections.length || route !== 'home' || document.hidden) return;
+  try {
+    const res = await call('probe');
+    for (const [id, ok] of Object.entries(res)) reach.set(id, ok);
+    renderHome();
+  } catch { }
 }
+setInterval(probe, 30000);
+
 
 // ---------------- workspaces ----------------
 
@@ -346,7 +425,7 @@ function createConnWs(c) {
   };
   ws.el = h('section', { class: 'ws', hidden: true },
     h('div', { class: 'ws-bar' },
-      h('span', { class: 'dot', style: { '--c': c.color || 'var(--faint)' } }), ws.titleEl, ws.hostEl,
+      h('span', { class: 'dot', style: { '--c': c.color || 'var(--tinta-4)' } }), ws.titleEl, ws.hostEl,
       views.length > 1 ? ws.seg : null,
       h('span', { class: 'spacer' }),
       ws.reconnectBtn,
@@ -421,8 +500,8 @@ function cssVar(name) { return getComputedStyle(document.documentElement).getPro
 function termTheme() {
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    background: cssVar('--term-bg'), foreground: cssVar('--term-fg'), cursor: cssVar('--accent'),
-    cursorAccent: cssVar('--term-bg'),
+    background: cssVar('--terminal'), foreground: cssVar('--terminal-tinta'), cursor: cssVar('--azulejo'),
+    cursorAccent: cssVar('--terminal'),
     selectionBackground: dark ? '#34405e' : '#c9d4f2',
     black: dark ? '#1c2335' : '#14161a', brightBlack: dark ? '#4a5576' : '#6b6f76',
     red: dark ? '#ff7a59' : '#c4401b', green: dark ? '#5fd39a' : '#237a50', yellow: dark ? '#f2c14e' : '#a87505',
@@ -743,7 +822,7 @@ function renderFiles(ws) {
   const rows = items.map(it => {
     const full = joinPath(f.path, it.name);
     const tr = h('tr', {
-      class: 'row' + (it.dir ? ' dir' : '') + (f.sel === it.name ? ' sel' : ''),
+      class: 'row-f' + (it.dir ? ' dir' : '') + (f.sel === it.name ? ' sel' : ''),
       onclick: () => { f.sel = it.name; f.list.querySelectorAll('tr.sel').forEach(r => r.classList.remove('sel')); tr.classList.add('sel'); },
       ondblclick: () => it.dir ? loadFiles(ws, full) : download(ws, full),
     },
@@ -850,7 +929,7 @@ function renderBoard() {
     const where = it.ws.connId ? (conn(it.ws.connId)?.host || '') : (it.ws.subtitle || '');
     tiles.append(h('div', { class: 'tile' },
       h('div', { class: 'tile-head', ondblclick: takeOver },
-        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--faint)' : (it.ws.color || '') } }),
+        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--tinta-4)' : (it.ws.color || '') } }),
         h('span', { class: 'name' }, it.ws.title),
         h('span', { class: 'where' }, it.kind === 'desktop' ? 'tela' : where),
         h('span', { class: 'spacer' }),
@@ -940,7 +1019,7 @@ function confirmBox(title, text, okLabel = 'Confirmar') {
   return new Promise(resolve => {
     let done = false;
     const finish = v => { if (done) return; done = true; resolve(v); close(); };
-    const close = modal(title, h('div', { style: { color: 'var(--muted)' } }, text), [
+    const close = modal(title, h('div', { style: { color: 'var(--tinta-2)' } }, text), [
       h('span', { class: 'spacer' }),
       h('button', { class: 'btn', onclick: () => finish(false) }, 'Cancelar'),
       h('button', { class: 'btn primary', onclick: () => finish(true) }, okLabel)]);
@@ -961,10 +1040,11 @@ function field(label, input, small) {
   return h('label', { class: 'field' }, h('span', null, label), input, small ? h('small', null, small) : null);
 }
 
-function editConnection(existing) {
+function editConnection(existing, prefill) {
   const c = existing ? { ...existing } : {
     id: '', name: '', os: 'linux', host: '', user: '', domain: '', keyPath: '', desktop: 'none', ssh: true,
     sshPort: 22, rdpPort: 3389, vncPort: 5900, group: '', color: '', redirectDrives: false, redirectClipboard: true,
+    ...prefill,
   };
   const inp = (key, attrs = {}) => h('input', { value: c[key] ?? '', ...attrs, oninput: e => { c[key] = attrs.type === 'number' ? Number(e.target.value) : e.target.value; } });
   let password, vncPassword;
@@ -1095,8 +1175,8 @@ function editAgent(existing) {
 function newMenu() {
   let close;
   const pick = fn => () => { close(); fn(); };
-  const item = (ic, title, sub, fn) => h('button', { class: 'card', style: { flexDirection: 'row', alignItems: 'center', gap: '12px' }, onclick: pick(fn) },
-    icon(ic, 20), h('div', null, h('div', { class: 'card-name' }, title), h('div', { style: { color: 'var(--muted)', fontSize: '12.5px' } }, sub)));
+  const item = (ic, title, sub, fn) => h('button', { class: 'card-pick', onclick: pick(fn) },
+    icon(ic, 22), h('div', null, h('b', null, title), h('small', null, sub)));
   close = modal('Criar', [
     item('monitor', 'Conexão', 'Windows ou Linux: tela, terminal e arquivos', () => editConnection()),
     item('bot', 'Agente', 'Claude Code, Codex, Gemini ou outro programa', () => editAgent()),
@@ -1242,4 +1322,4 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
 
 renderTabs();
 renderHome();
-call('ready').then(setState).catch(err => toast(err.message, { error: true }));
+call('ready').then(data => { setState(data); probe(); }).catch(err => toast(err.message, { error: true }));

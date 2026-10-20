@@ -287,6 +287,9 @@ public sealed class MainForm : Form
                 PushState();
                 break;
             }
+            case "probe":
+                Reply(m, await Probe());
+                break;
             case "hostkey.forget":
                 _store.Data.KnownHosts.Clear();
                 _store.Save(); Reply(m);
@@ -349,6 +352,21 @@ public sealed class MainForm : Form
         var c = Need(Str(m, "connId"));
         if (!_sftp.TryGetValue(c.Id, out var f)) _sftp[c.Id] = f = new Sftp(c, _store);
         return f;
+    }
+
+    /// <summary>Is each machine answering on the port Ponte would use? A plain TCP connect, 1.5 s each, all in parallel.</summary>
+    async Task<Dictionary<string, bool>> Probe()
+    {
+        var checks = _store.Data.Connections.Select(async c =>
+        {
+            var fallback = c.Desktop switch { "rdp" => c.RdpPort, "vnc" => c.VncPort, _ => c.SshPort };
+            var (host, port) = Ssh.SplitHost(c.Host, fallback);
+            using var tcp = new System.Net.Sockets.TcpClient();
+            using var cts = new CancellationTokenSource(1500);
+            try { await tcp.ConnectAsync(host, port, cts.Token); return (c.Id, true); }
+            catch { return (c.Id, false); }
+        });
+        return (await Task.WhenAll(checks)).ToDictionary(r => r.Item1, r => r.Item2);
     }
 
     Connection Need(string id) => _store.Conn(id) ?? throw new InvalidOperationException("Conexão não encontrada.");
