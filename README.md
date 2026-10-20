@@ -13,9 +13,13 @@ Acesso remoto a máquinas Windows e Linux, e um quadro para os seus agentes de I
 
 Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domínio e o resto ficam em "Mais opções".
 
+## Visual
+
+O desenho parte de Brasília: o azul dos azulejos de Athos Bulcão como cor principal, o cinza do concreto aparente no fundo, o amarelo do ipê para o que está rodando e os três arcos da Ponte JK no logo e na aba ativa. A fonte é a Gabarito, da Naipe Foundry do Rio de Janeiro (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
+
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.0.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.1.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 

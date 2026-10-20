@@ -16,6 +16,10 @@ public sealed class MainForm : Form
     readonly Voice _voice = new();
     VncBridge? _vnc;
 
+    // Test mode: the window renders off-screen, never takes focus and stays out of the taskbar.
+    static readonly bool Offscreen = Environment.GetEnvironmentVariable("PONTE_OFFSCREEN") == "1";
+    protected override bool ShowWithoutActivation => Offscreen;
+
     public MainForm()
     {
         Text = "Ponte";
@@ -23,10 +27,55 @@ public sealed class MainForm : Form
         MinimumSize = new Size(760, 480);
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1360, 860);
-        BackColor = IsDark ? Color.FromArgb(17, 17, 19) : Color.FromArgb(250, 250, 249);
+        BackColor = IsDark ? Color.FromArgb(15, 20, 32) : Color.FromArgb(230, 229, 225);
+        if (Offscreen)
+        {
+            StartPosition = FormStartPosition.Manual;
+            Location = new Point(-32000, -32000);
+            ShowInTaskbar = false;
+        }
         Controls.Add(_web);
         _store.Load();
+        Resize += (_, _) => Post(new { t = "win.state", max = WindowState == FormWindowState.Maximized });
     }
+
+    // ---------- custom title bar ----------
+    // The caption is drawn by the web UI. WM_NCCALCSIZE drops only the top of the native frame, so Windows still
+    // provides resize borders, snap, the shadow and rounded corners.
+
+    const int WM_NCCALCSIZE = 0x0083, WM_NCLBUTTONDOWN = 0x00A1, HTCAPTION = 2, HTTOP = 12;
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == WM_NCCALCSIZE && m.WParam != IntPtr.Zero)
+        {
+            var p = Marshal.PtrToStructure<NcCalcSizeParams>(m.LParam);
+            var top = p.Rect0.Top;
+            base.WndProc(ref m);
+            p = Marshal.PtrToStructure<NcCalcSizeParams>(m.LParam);
+            // a maximized window hangs over the screen edge by the frame thickness
+            p.Rect0.Top = top + (IsZoomed(Handle) ? FrameThickness() : 0);
+            Marshal.StructureToPtr(p, m.LParam, false);
+            m.Result = IntPtr.Zero;
+            return;
+        }
+        base.WndProc(ref m);
+    }
+
+    int FrameThickness()
+    {
+        var dpi = (uint)DeviceDpi;
+        return GetSystemMetricsForDpi(33 /* SM_CYSIZEFRAME */, dpi) + GetSystemMetricsForDpi(92 /* SM_CXPADDEDBORDER */, dpi);
+    }
+
+    void StartNonClientDrag(int hit)
+    {
+        ReleaseCapture();
+        SendMessage(Handle, WM_NCLBUTTONDOWN, hit, IntPtr.Zero);
+    }
+
+    void ToggleMaximize() =>
+        WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : FormWindowState.Maximized;
 
     static bool IsDark =>
         Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
@@ -37,8 +86,10 @@ public sealed class MainForm : Form
         base.OnHandleCreated(e);
         var dark = IsDark ? 1 : 0;
         DwmSetWindowAttribute(Handle, 20, ref dark, sizeof(int));
+        SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, 0x0027u /* NOMOVE|NOSIZE|NOZORDER|FRAMECHANGED */ | (Offscreen ? 0x0010u /* NOACTIVATE */ : 0u));
 
-        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ponte", "WebView2");
+        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ponte",
+            Offscreen ? "WebView2-test" : "WebView2");   // a separate browser process, so tests never touch an open window
         var env = await CoreWebView2Environment.CreateAsync(null, dataDir);
         await _web.EnsureCoreWebView2Async(env);
         var core = _web.CoreWebView2;
@@ -48,6 +99,7 @@ public sealed class MainForm : Form
         core.Settings.AreBrowserAcceleratorKeysEnabled = dev;
         core.Settings.IsStatusBarEnabled = false;
         core.Settings.IsZoomControlEnabled = false;
+        core.Settings.IsNonClientRegionSupportEnabled = true;   // CSS app-region: drag on the title bar
         core.SetVirtualHostNameToFolderMapping("app.ponte", Path.Combine(AppContext.BaseDirectory, "wwwroot"),
             CoreWebView2HostResourceAccessKind.Deny);
         core.WebMessageReceived += OnMessage;
@@ -95,7 +147,15 @@ public sealed class MainForm : Form
         {
             case "ready":
                 Reply(m, StateDto());
+                Post(new { t = "win.state", max = WindowState == FormWindowState.Maximized });
                 break;
+
+            // ----- window chrome -----
+            case "win.min": WindowState = FormWindowState.Minimized; break;
+            case "win.max": ToggleMaximize(); break;
+            case "win.close": Close(); break;
+            case "win.drag": StartNonClientDrag(HTCAPTION); break;
+            case "win.resize-top": if (WindowState == FormWindowState.Normal) StartNonClientDrag(HTTOP); break;
 
             // ----- connections & agents -----
             case "conn.save":
@@ -377,4 +437,12 @@ public sealed class MainForm : Form
 
     [DllImport("dwmapi.dll")]
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+    [DllImport("user32.dll")] static extern bool ReleaseCapture();
+    [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, IntPtr lParam);
+    [DllImport("user32.dll")] static extern bool IsZoomed(IntPtr hWnd);
+    [DllImport("user32.dll")] static extern int GetSystemMetricsForDpi(int index, uint dpi);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)] struct Rect { public int Left, Top, Right, Bottom; }
+    [StructLayout(LayoutKind.Sequential)] struct NcCalcSizeParams { public Rect Rect0, Rect1, Rect2; public IntPtr Pos; }
 }

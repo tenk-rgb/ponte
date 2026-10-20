@@ -9,7 +9,8 @@ public sealed class Store
 {
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
-    readonly string _dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ponte");
+    readonly string _dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        Environment.GetEnvironmentVariable("PONTE_OFFSCREEN") == "1" ? "Ponte-test" : "Ponte");
     string FilePath => Path.Combine(_dir, "data.json");
     readonly object _lock = new();
 

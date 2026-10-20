@@ -124,6 +124,11 @@ bridge?.addEventListener('message', e => {
     case 'term.data': onTermData(m.sid, m.data); break;
     case 'session.closed': onSessionClosed(m.sid, m.reason); break;
     case 'status': onStatus(m.sid, m.text); break;
+    case 'win.state':
+      document.body.classList.toggle('max', !!m.max);
+      $('#win-max').title = m.max ? 'Restaurar' : 'Maximizar';
+      layoutRdp();
+      break;
   }
 });
 
@@ -182,9 +187,9 @@ function renderTabs() {
   tabs.replaceChildren();
   const live = [...sessions.values()].filter(s => !s.ended).length;
   tabs.append(
-    h('button', { class: 'tab' + (route === 'home' ? ' active' : ''), onclick: () => go('home'), title: 'Início' },
+    h('button', { class: 'tab fixed' + (route === 'home' ? ' active' : ''), onclick: () => go('home'), title: 'Início' },
       icon('home'), h('span', { class: 'name' }, 'Início')),
-    h('button', { class: 'tab' + (route === 'board' ? ' active' : ''), onclick: () => go('board'), title: 'Tudo o que está aberto, lado a lado' },
+    h('button', { class: 'tab fixed' + (route === 'board' ? ' active' : ''), onclick: () => go('board'), title: 'Tudo o que está aberto, lado a lado' },
       icon('grid'), h('span', { class: 'name' }, 'Quadro'), live ? h('span', { class: 'count' }, live) : null),
   );
   workspaces.forEach((ws, i) => {
@@ -194,7 +199,7 @@ function renderTabs() {
       onclick: () => go(ws.id),
       onauxclick: e => { if (e.button === 1) closeWs(ws); },
     },
-      h('span', { class: 'dot' + (running ? ' live' : ''), style: { '--c': ws.color || (running ? 'var(--ok)' : '') } }),
+      h('span', { class: 'dot' + (running ? ' live' : ''), style: { '--c': ws.color || '' } }),
       h('span', { class: 'name' }, ws.title),
       h('span', { class: 'close', title: 'Fechar', onclick: e => { e.stopPropagation(); closeWs(ws); } }, icon('x', 13)),
     ));
@@ -242,7 +247,19 @@ function renderHome() {
       h('div', { class: 'row' },
         h('button', { class: 'btn primary', onclick: () => editAgent() }, icon('plus'), 'Novo agente')));
 
+  const running = [...sessions.values()].filter(s => !s.ended).length;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const summary = !S.connections.length && !S.agents.length
+    ? 'Salve uma máquina ou um agente para começar.'
+    : `${plural(S.connections.length, 'conexão', 'conexões')} e ${plural(S.agents.length, 'agente', 'agentes')}` +
+      (running ? `. ${plural(running, 'sessão aberta', 'sessões abertas')} agora.` : '.');
+  const turns = [0, 1, 3, 2, 0, 1, 2, 3, 1, 0, 2, 3];   // fixed rotations, like a laid tile panel
+  const hero = h('div', { class: 'hero' },
+    h('div', null, h('h1', null, 'Suas máquinas'), h('p', null, summary)),
+    h('div', { class: 'azulejo', 'aria-hidden': 'true' }, turns.map(t => h('i', { class: t ? `r${t}` : '' }))));
+
   root.replaceChildren(h('div', { class: 'home-inner' },
+    hero,
     h('div', { class: 'section' },
       h('div', { class: 'section-head' },
         h('h2', null, 'Conexões'),
@@ -271,13 +288,13 @@ function connCard(c) {
     actions.push(h('button', { class: 'btn', onclick: e => { e.stopPropagation(); openConn(c.id, 'files'); } }, icon('folder', 14), 'Arquivos'));
   }
   return h('div', {
-    class: 'card', tabindex: 0, style: { '--c': c.color || 'transparent' },
+    class: 'card', tabindex: 0,
     onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter') openConn(c.id); },
     title: 'Clique para conectar',
   },
     h('div', { class: 'card-top' },
-      h('span', { class: 'pill' }, c.os === 'windows' ? 'Windows' : 'Linux'),
-      c.desktop === 'vnc' ? h('span', { class: 'pill' }, 'VNC') : null,
+      h('span', { class: 'chip-color', style: { '--c': c.color || '' } }),
+      h('span', { class: 'pill' }, (c.os === 'windows' ? 'Windows' : 'Linux') + (c.desktop === 'vnc' ? ', VNC' : '')),
       h('span', { class: 'spacer' }),
       h('button', { class: 'btn icon ghost edit', title: 'Editar', onclick: e => { e.stopPropagation(); editConnection(c); } }, icon('edit', 14))),
     h('div', { class: 'card-name' }, c.name),
@@ -406,11 +423,11 @@ function termTheme() {
   return {
     background: cssVar('--term-bg'), foreground: cssVar('--term-fg'), cursor: cssVar('--accent'),
     cursorAccent: cssVar('--term-bg'),
-    selectionBackground: dark ? '#3f3f46' : '#d6d3d1',
-    black: dark ? '#27272a' : '#1c1917', brightBlack: dark ? '#52525b' : '#78716c',
-    red: dark ? '#f87171' : '#b91c1c', green: dark ? '#4ade80' : '#15803d', yellow: dark ? '#facc15' : '#a16207',
-    blue: dark ? '#60a5fa' : '#1d4ed8', magenta: dark ? '#c084fc' : '#7e22ce', cyan: dark ? '#22d3ee' : '#0e7490',
-    white: dark ? '#e4e4e7' : '#e7e5e4', brightWhite: '#fafafa',
+    selectionBackground: dark ? '#34405e' : '#c9d4f2',
+    black: dark ? '#1c2335' : '#14161a', brightBlack: dark ? '#4a5576' : '#6b6f76',
+    red: dark ? '#ff7a59' : '#c4401b', green: dark ? '#5fd39a' : '#237a50', yellow: dark ? '#f2c14e' : '#a87505',
+    blue: dark ? '#8fa8ff' : '#2747a6', magenta: dark ? '#d7a1ff' : '#8b3fb8', cyan: dark ? '#6fd6e6' : '#0e7490',
+    white: dark ? '#e2e6ee' : '#d9d7d1', brightWhite: '#f6f6f3',
   };
 }
 
@@ -833,7 +850,7 @@ function renderBoard() {
     const where = it.ws.connId ? (conn(it.ws.connId)?.host || '') : (it.ws.subtitle || '');
     tiles.append(h('div', { class: 'tile' },
       h('div', { class: 'tile-head', ondblclick: takeOver },
-        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--faint)' : (it.ws.color || 'var(--ok)') } }),
+        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--faint)' : (it.ws.color || '') } }),
         h('span', { class: 'name' }, it.ws.title),
         h('span', { class: 'where' }, it.kind === 'desktop' ? 'tela' : where),
         h('span', { class: 'spacer' }),
@@ -1202,6 +1219,18 @@ document.addEventListener('keydown', e => {
 // ---------------- boot ----------------
 
 hydrateIcons();
+
+// Window chrome. CSS app-region handles dragging when WebView2 supports it; the mousedown path covers the rest.
+$('#win-min').onclick = () => send('win.min');
+$('#win-max').onclick = () => send('win.max');
+$('#win-close').onclick = () => send('win.close');
+$('#resize-top').addEventListener('mousedown', e => { if (e.button === 0) { e.preventDefault(); send('win.resize-top'); } });
+const isBarBackground = el => el.closest('#bar') && !el.closest('button, input, .winctl, #resize-top');
+$('#bar').addEventListener('mousedown', e => {
+  if (e.button === 0 && e.detail === 1 && isBarBackground(e.target)) send('win.drag');
+});
+$('#bar').addEventListener('dblclick', e => { if (isBarBackground(e.target)) send('win.max'); });
+
 $('#btn-search').onclick = palette;
 $('#btn-new').onclick = newMenu;
 $('#btn-settings').onclick = settings;
