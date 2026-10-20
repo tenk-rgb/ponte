@@ -110,7 +110,7 @@ bridge?.addEventListener('message', e => {
 
 // ---------------- state ----------------
 
-const S = { connections: [], agents: [], mremoteng: false };
+const S = { connections: [], agents: [] };
 const workspaces = [];          // open tabs
 const sessions = new Map();     // sid -> { ws, kind, term? }
 const earlyData = new Map();    // output that arrived before its terminal registered
@@ -320,7 +320,7 @@ function renderSide() {
       h('pre', { 'data-agent': a.id }, agentTail(a)));
   });
 
-  home.side.replaceChildren(
+  home.side.replaceChildren(...[
     net,
     h('section', null,
       h('div', { class: 'section-head' },
@@ -329,7 +329,7 @@ function renderSide() {
         S.agents.length > 1 ? h('button', { class: 'btn ghost small', onclick: startAllAgents, title: 'Abrir todos no quadro' }, icon('play', 16), 'Todos') : null,
         h('button', { class: 'btn small', onclick: () => editAgent() }, icon('plus', 16), 'Novo')),
       S.agents.length ? h('div', { class: 'agents' }, agents)
-        : h('div', { class: 'empty-line' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal, no seu PC ou num servidor Linux.')));
+        : h('div', { class: 'empty-line' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal, no seu PC ou num servidor Linux.'))].filter(Boolean));
 }
 
 // keep the agents' tails live while Início is on screen
@@ -392,7 +392,7 @@ function renderHome() {
   else if (q && looksLikeHost(q)) home.hint.append('Enter abre uma conexão nova com ', h('b', null, q), '.');
   else if (q) home.hint.append('Nada salvo com esse nome.');
   else if (S.connections.length) home.hint.append(`${S.connections.length} ${S.connections.length === 1 ? 'conexão salva' : 'conexões salvas'}` + (live ? `, ${live} ${live === 1 ? 'sessão aberta' : 'sessões abertas'}.` : '.'));
-  else home.hint.append('Digite um endereço para a primeira conexão, ou traga as do mRemoteNG.');
+  else home.hint.append('Digite um endereço para a primeira conexão, ou importe suas configurações em Ajustes.');
 
   const out = [];
 
@@ -412,7 +412,7 @@ function renderHome() {
   const head = h('div', { class: 'section-head' },
     h('h2', null, q ? 'Resultados' : 'Todas as conexões'),
     h('span', { class: 'spacer' }),
-    S.mremoteng && !S.connections.length ? h('button', { class: 'btn ghost small', onclick: importMremote }, icon('import', 16), 'Trazer do mRemoteNG') : null,
+    !S.connections.length ? h('button', { class: 'btn ghost small', onclick: importConfig }, icon('import', 16), 'Importar configurações') : null,
     h('button', { class: 'btn small', onclick: () => editConnection() }, icon('plus', 16), 'Nova conexão'));
   const body = [];
   if (!S.connections.length) {
@@ -1098,7 +1098,7 @@ function renderBoard() {
           h('span', { class: 'btn small' }, icon('maximize', 14), ended ? 'Abrir' : 'Assumir'))));
     }
   });
-  root.replaceChildren(head, launch, tiles);
+  root.replaceChildren(...[head, launch, tiles].filter(Boolean));
   requestAnimationFrame(() => items.forEach(it => { if (it.T) try { it.T.fit.fit(); } catch { } }));
 }
 
@@ -1357,11 +1357,11 @@ function newMenu() {
 function settings() {
   let close;
   close = modal('Ajustes', [
-    h('div', { class: 'field' }, h('span', null, 'mRemoteNG'),
+    h('div', { class: 'field' }, h('span', null, 'Configurações'),
       h('div', { class: 'with-btn' },
-        h('button', { class: 'btn', onclick: () => { close(); importMremote(); } }, icon('import', 14), 'Trazer conexões do mRemoteNG'),
-        h('button', { class: 'btn ghost', onclick: () => { close(); importMremote(true); } }, 'Escolher outro arquivo')),
-      h('small', null, 'Lê o confCons.xml e traz RDP, SSH e VNC com as senhas.')),
+        h('button', { class: 'btn', onclick: () => { close(); importConfig(); } }, icon('import', 14), 'Importar configurações'),
+        h('button', { class: 'btn ghost', onclick: () => { close(); exportConfig(); } }, icon('download', 14), 'Exportar')),
+      h('small', null, 'Importa um backup do Ponte (.json) ou o confCons.xml do mRemoteNG. As senhas de um backup só abrem no mesmo PC e usuário do Windows.')),
     h('div', { class: 'field' }, h('span', null, 'Chaves de servidores SSH'),
       h('div', null, h('button', { class: 'btn', onclick: async () => { await call('hostkey.forget'); toast('Pronto. Na próxima conexão o Ponte aceita a chave nova.'); } }, icon('key', 14), 'Esquecer chaves salvas')),
       h('small', null, 'Use se um servidor foi reinstalado e o Ponte avisa que a chave mudou.')),
@@ -1371,10 +1371,17 @@ function settings() {
   ], [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: () => close() }, 'Fechar')]);
 }
 
-async function importMremote(pick = false) {
+async function importConfig() {
   try {
-    const { count } = await call('import.mremoteng', { pick });
-    toast(count ? `${count} conexão(ões) trazidas do mRemoteNG.` : 'Nenhuma conexão RDP, SSH ou VNC encontrada no arquivo.');
+    const { count } = await call('config.import');
+    if (count) toast(`${count} ${count === 1 ? 'item importado' : 'itens importados'}.`);
+  } catch (err) { toast(err.message, { error: true }); }
+}
+
+async function exportConfig() {
+  try {
+    const { path } = await call('config.export');
+    if (path) toast('Backup salvo.', { action: 'Mostrar', onAction: () => call('reveal', { path }) });
   } catch (err) { toast(err.message, { error: true }); }
 }
 
@@ -1396,7 +1403,8 @@ function palette() {
     { ic: 'term', title: 'Terminal do Windows', keys: 'terminal powershell local', run: openLocalTerminal },
     { ic: 'grid', title: 'Quadro', keys: 'quadro board tudo', run: () => go('board') },
     { ic: 'play', title: 'Abrir todos os agentes', keys: 'abrir todos agentes', run: startAllAgents },
-    { ic: 'import', title: 'Trazer do mRemoteNG', keys: 'importar mremoteng', run: () => importMremote() },
+    { ic: 'import', title: 'Importar configurações', keys: 'importar backup mremoteng configuracoes', run: importConfig },
+    { ic: 'download', title: 'Exportar configurações', keys: 'exportar backup configuracoes', run: exportConfig },
     { ic: 'gear', title: 'Ajustes', keys: 'ajustes configuracoes', run: settings },
   ];
 

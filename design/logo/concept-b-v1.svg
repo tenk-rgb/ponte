@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Ponte concept B: arch and deck in one stroke weight</title>
+  <!-- pictorial, abstracted: one arch ring with legs, one deck bar across it; both 44 units thick -->
+  <path fill="#000" d="M32 224v-96a96 96 0 0 1 192 0v96h-44v-96a52 52 0 0 0-104 0v96z"/>
+  <path fill="#000" d="M8 108h240v44H8z"/>
+</svg>

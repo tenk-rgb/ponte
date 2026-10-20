@@ -216,7 +216,8 @@ main { flex: 1; min-height: 0; position: relative; }
 .hero .hint b { color: var(--tinta-2); font-weight: 600; }
 
 .section { margin-top: 40px; }
-.section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; row-gap: 8px; }
+.section-head h2 { white-space: nowrap; }
 .section-head h2 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -.015em; }
 .section-head .hint { color: var(--tinta-3); font-size: 13px; }
 .section-head .spacer { flex: 1; }

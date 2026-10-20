@@ -271,20 +271,45 @@ public sealed class MainForm : Form
                 Reply(m, new { path = dlg.ShowDialog(this) == DialogResult.OK ? dlg.SelectedPath : "" });
                 break;
             }
-            case "import.mremoteng":
+            // Settings import: a Ponte backup (data.json) or, if the file is XML, an mRemoteNG confCons.xml.
+            case "config.import":
             {
-                var path = MremoteImport.DefaultPath;
-                if (!File.Exists(path) || Bool(m, "pick"))
+                using var dlg = new OpenFileDialog { Title = "Importar configurações", Filter = "Configurações (*.json;*.xml)|*.json;*.xml" };
+                if (dlg.ShowDialog(this) != DialogResult.OK) { Reply(m, new { count = 0 }); break; }
+                int count;
+                if (dlg.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
                 {
-                    using var dlg = new OpenFileDialog { Title = "Arquivo de conexões do mRemoteNG", Filter = "confCons.xml|*.xml" };
-                    if (dlg.ShowDialog(this) != DialogResult.OK) { Reply(m, new { count = 0 }); break; }
-                    path = dlg.FileName;
+                    var imported = MremoteImport.Read(dlg.FileName);
+                    _store.Data.Connections.AddRange(imported);
+                    count = imported.Count;
                 }
-                var imported = MremoteImport.Read(path);
-                _store.Data.Connections.AddRange(imported);
+                else
+                {
+                    var data = System.Text.Json.JsonSerializer.Deserialize<AppData>(File.ReadAllText(dlg.FileName), Store.Json)
+                        ?? throw new InvalidDataException("O arquivo não é um backup do Ponte.");
+                    count = 0;
+                    foreach (var c in data.Connections)
+                    {
+                        _store.Data.Connections.RemoveAll(x => x.Id == c.Id);
+                        _store.Data.Connections.Add(c); count++;
+                    }
+                    foreach (var a in data.Agents)
+                    {
+                        _store.Data.Agents.RemoveAll(x => x.Id == a.Id);
+                        _store.Data.Agents.Add(a); count++;
+                    }
+                }
                 _store.Save();
-                Reply(m, new { count = imported.Count });
+                Reply(m, new { count });
                 PushState();
+                break;
+            }
+            case "config.export":
+            {
+                using var dlg = new SaveFileDialog { Title = "Exportar configurações", Filter = "Backup do Ponte (*.json)|*.json", FileName = $"ponte-{DateTime.Now:yyyy-MM-dd}.json" };
+                if (dlg.ShowDialog(this) != DialogResult.OK) { Reply(m, new { path = "" }); break; }
+                File.WriteAllText(dlg.FileName, System.Text.Json.JsonSerializer.Serialize(_store.Data, Store.Json));
+                Reply(m, new { path = dlg.FileName });
                 break;
             }
             case "probe":
@@ -408,7 +433,6 @@ public sealed class MainForm : Form
             hasVncPassword = !string.IsNullOrEmpty(c.VncSecret),
         }),
         agents = _store.Data.Agents,
-        mremoteng = File.Exists(MremoteImport.DefaultPath),
     };
 
     void PushState() => Post(new { t = "state", data = StateDto() });

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Ponte concept B v2: arch over the deck, piers at the ends</title>
+  <!-- the arch ring sits on the deck; the deck is wider than the arch; two piers carry it. One stroke weight: 44 -->
+  <path fill="#000" d="M36 120a92 92 0 0 1 184 0h-44a48 48 0 0 0-96 0z"/>
+  <path fill="#000" d="M8 120h240v44H8z M16 164h44v56H16z M196 164h44v56h-44z"/>
+</svg>

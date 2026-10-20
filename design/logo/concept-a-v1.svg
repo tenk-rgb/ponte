@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Ponte concept A: the P with an arch inside</title>
+  <!-- letterform: a bold P whose counter is an archway (round top, open base line) -->
+  <path fill="#000" fill-rule="evenodd" d="M56 40h104a56 56 0 0 1 0 112h-56v64H56z M104 128V96a36 36 0 0 1 72 0v32z"/>
+</svg>
