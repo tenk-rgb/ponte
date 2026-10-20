@@ -27,34 +27,7 @@ function h(tag, attrs, ...kids) {
   return el;
 }
 
-const ICONS = {
-  plus: '<path d="M12 5v14M5 12h14"/>',
-  minus: '<path d="M5 12h14"/>',
-  search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/>',
-  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
-  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
-  term: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
-  folder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5z"/>',
-  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
-  x: '<path d="M7 7l10 10M17 7 7 17"/>',
-  edit: '<path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17z"/>',
-  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
-  home: '<path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/>',
-  upload: '<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 20h14"/>',
-  download: '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/>',
-  refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5"/>',
-  trash: '<path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/>',
-  up: '<path d="M12 19V5M6.5 10.5 12 5l5.5 5.5"/>',
-  newfolder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5z"/><path d="M12 10v6M9 13h6"/>',
-  bot: '<rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4v4M9.5 13v1M14.5 13v1"/>',
-  play: '<path d="M8 5.5v13l10-6.5z"/>',
-  enter: '<path d="M20 5v7a3 3 0 0 1-3 3H6M9.5 11.5 6 15l3.5 3.5"/>',
-  maximize: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
-  power: '<path d="M12 3v8M6.3 7a8 8 0 1 0 11.4 0"/>',
-  import: '<path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
-  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/>',
-};
+import { ICONS } from './icons.js';
 
 function icon(name, size = 16) {
   return h('span', {
@@ -257,7 +230,7 @@ function buildHome() {
   homeBuilt = true;
 }
 
-// ----- side column: the network map and the agents -----
+// ----- side column: reachability with latency, and the agents -----
 
 const SVG = 'http://www.w3.org/2000/svg';
 function s(tag, attrs, ...kids) {
@@ -269,47 +242,35 @@ function s(tag, attrs, ...kids) {
   return el;
 }
 
-// Traces leave the hub diagonally and finish straight, the way tracks run on a circuit board.
-function tracePath(x1, y1, x2, y2) {
-  const dx = x2 - x1, dy = y2 - y1;
-  const d = Math.min(Math.abs(dx), Math.abs(dy));
-  const mx = x1 + Math.sign(dx) * d, my = y1 + Math.sign(dy) * d;
-  return `M${x1},${y1} L${mx},${my} L${x2},${y2}`;
+// reach: connId -> connect time in ms, or -1 when the port did not answer
+const isUp = id => (reach.get(id) ?? -1) >= 0;
+
+function machineIcon(c) {
+  if (c.os === 'windows') return 'monitor';
+  if (/raspberry|pi\b|arduino|esp/i.test(c.name)) return 'cpu';
+  return hasDesktop(c) ? 'laptop' : 'server';
 }
 
-function netMap() {
-  const W = 320, H = 200, cx = W / 2, cy = H / 2;
-  const list = [...S.connections].sort((a, b) => (b.lastUsed || '').localeCompare(a.lastUsed || '')).slice(0, 10);
-  const extra = S.connections.length - list.length;
-  const svg = s('svg', { class: 'net', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Mapa das conexões a partir deste PC' });
-  const n = list.length;
-  const nodes = list.map((c, i) => {
-    const a = (-90 + (360 / Math.max(n, 1)) * i) * Math.PI / 180;
-    return { c, x: Math.round(cx + Math.cos(a) * 128), y: Math.round(cy + Math.sin(a) * 70) };
+function reachList() {
+  const list = [...S.connections].sort((a, b) => {
+    const ua = isUp(a.id), ub = isUp(b.id);
+    if (ua !== ub) return ua ? -1 : 1;
+    return (reach.get(a.id) ?? 9999) - (reach.get(b.id) ?? 9999) || a.name.localeCompare(b.name);
   });
-  for (const { c, x, y } of nodes) {
-    const on = reach.get(c.id) === true;
-    const d = tracePath(cx, cy, x, y);
-    svg.append(s('path', { class: 'trace' + (on ? ' on' : ''), d }));
-    if (on && !matchMedia('(prefers-reduced-motion: reduce)').matches) svg.append(s('path', { class: 'pulse', d }));
-  }
-  for (const { c, x, y } of nodes) {
-    const on = reach.get(c.id) === true;
-    const label = c.name.length > 14 ? c.name.slice(0, 13) + '…' : c.name;
-    const below = y >= cy;
-    svg.append(s('g', {
-      class: 'node' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
-      onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter') openConn(c.id); },
+  return h('div', { class: 'reach' }, list.map(c => {
+    const ms = reach.get(c.id);
+    const known = reach.has(c.id);
+    const up = isUp(c.id);
+    const pct = up ? Math.max(6, Math.round(100 - Math.min(ms, 1000) / 10)) : 0;
+    return h('button', {
+      class: 'reach-row ' + (up ? 'on' : known ? 'off' : ''), onclick: () => openConn(c.id),
+      title: up ? `${c.name} respondeu em ${ms} ms` : known ? `${c.name} não respondeu` : `${c.name}, ainda verificando`,
     },
-      s('rect', { x: x - 6, y: y - 6, width: 12, height: 12, rx: 2, transform: `rotate(45 ${x} ${y})` }),
-      s('text', { x, y: below ? y + 22 : y - 14, 'text-anchor': 'middle' }, document.createTextNode(label)),
-      s('title', null, document.createTextNode(`${c.name}, ${c.host}`))));
-  }
-  svg.append(s('g', { class: 'hub' },
-    s('rect', { x: cx - 8, y: cy - 8, width: 16, height: 16, rx: 2, transform: `rotate(45 ${cx} ${cy})` }),
-    s('text', { x: cx, y: cy + 26, 'text-anchor': 'middle' }, document.createTextNode('Este PC'))));
-  if (extra > 0) svg.append(s('text', { x: W - 4, y: H - 4, 'text-anchor': 'end', fill: 'currentColor', 'font-size': 11 }, document.createTextNode(`+${extra}`)));
-  return svg;
+      icon(machineIcon(c), 18),
+      h('span', { class: 'name' }, c.name),
+      h('span', { class: 'bar' }, h('i', { style: { '--w': pct + '%' } })),
+      h('span', { class: 'ms' }, up ? `${ms} ms` : known ? 'sem resposta' : '…'));
+  }));
 }
 
 function lastLines(T, n = 3) {
@@ -330,15 +291,15 @@ function agentTail(a) {
 }
 
 function renderSide() {
-  const online = S.connections.filter(c => reach.get(c.id) === true).length;
+  const online = S.connections.filter(c => isUp(c.id)).length;
   const net = S.connections.length
     ? h('section', { class: 'panel' },
       h('div', { class: 'panel-head' }, h('h2', null, 'Rede'),
         h('span', { class: 'hint' }, reach.size ? `${online} de ${S.connections.length} respondendo` : 'verificando…')),
-      netMap(),
-      h('div', { class: 'net-legend' },
-        h('span', null, h('i', { style: { background: 'var(--maracuja)' } }), 'respondendo'),
-        h('span', null, h('i', { style: { boxShadow: 'inset 0 0 0 1.5px var(--folha-4)' } }), 'sem resposta')))
+      reachList(),
+      h('div', { class: 'reach-foot' },
+        h('span', null, icon('activity', 13), 'tempo até a porta responder'),
+        h('span', null, icon('refresh', 13), 'a cada 30 s')))
     : null;
 
   const agents = S.agents.map(a => {
@@ -396,11 +357,11 @@ function quickConnect(q) {
 }
 
 function stateMark(c) {
-  const r = reach.get(c.id);
+  const up = isUp(c.id), known = reach.has(c.id);
   return h('span', {
-    class: 'state ' + (r === true ? 'on' : r === false ? 'off' : 'unknown'),
+    class: 'state ' + (up ? 'on' : known ? 'off' : 'unknown'),
     style: { '--c': c.color || '' },
-    title: r === true ? 'Respondendo' : r === false ? 'Não respondeu agora' : '',
+    title: up ? `Respondeu em ${reach.get(c.id)} ms` : known ? 'Não respondeu agora' : '',
   });
 }
 
@@ -503,7 +464,7 @@ function openConn(connId, view) {
 
 function createConnWs(c) {
   const ws = {
-    id: 'ws' + Math.random().toString(36).slice(2, 8), connId: c.id, title: c.name, color: c.color,
+    id: 'ws' + Math.random().toString(36).slice(2, 8), since: Date.now(), connId: c.id, title: c.name, color: c.color,
     active: null, term: null, rdp: null, vnc: null, files: { path: '', items: [], sel: null },
   };
   const views = [];
@@ -522,7 +483,7 @@ function createConnWs(c) {
   };
   ws.el = h('section', { class: 'ws', hidden: true },
     h('div', { class: 'ws-bar' },
-      h('span', { class: 'dot', style: { '--c': c.color || 'var(--folha-4)' } }), ws.titleEl, ws.hostEl,
+      h('span', { class: 'dot', style: { '--c': c.color || 'var(--tinta-4)' } }), ws.titleEl, ws.hostEl,
       views.length > 1 ? ws.seg : null,
       h('span', { class: 'spacer' }),
       ws.reconnectBtn,
@@ -563,7 +524,8 @@ function closeWs(ws) {
   try { ws.vnc?.rfb?.disconnect(); } catch { }
   ws.el.remove();
   workspaces.splice(workspaces.indexOf(ws), 1);
-  if (route === ws.id) go(workspaces.at(-1)?.id || 'home'); else renderTabs();
+  if (route === ws.id) go(workspaces.at(-1)?.id || 'home');
+  else { renderTabs(); if (route === 'board') renderBoard(); }
   layoutRdp();
 }
 
@@ -597,13 +559,13 @@ function cssVar(name) { return getComputedStyle(document.documentElement).getPro
 function termTheme() {
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
   return {
-    background: cssVar('--terminal'), foreground: cssVar('--terminal-tinta'), cursor: cssVar('--maracuja'),
+    background: cssVar('--terminal'), foreground: cssVar('--terminal-tinta'), cursor: cssVar('--acento'),
     cursorAccent: cssVar('--terminal'),
-    selectionBackground: dark ? '#2a5a48' : '#cfe0d4',
-    black: dark ? '#143329' : '#0f2a22', brightBlack: dark ? '#4d6e60' : '#5a776c',
-    red: dark ? '#ff7a59' : '#c4401b', green: dark ? '#7fd8a4' : '#237a50', yellow: dark ? '#f2c230' : '#8a6700',
-    blue: dark ? '#7fb3ff' : '#1f5fae', magenta: dark ? '#e08ad8' : '#9b3c8f', cyan: dark ? '#5fd1c8' : '#0e7470',
-    white: dark ? '#d9e6dc' : '#dfe8e1', brightWhite: '#f6f9f6',
+    selectionBackground: dark ? '#2f3336' : '#cfd9de',
+    black: dark ? '#16181c' : '#0f1419', brightBlack: dark ? '#5b6167' : '#536471',
+    red: dark ? '#f4212e' : '#c4181f', green: dark ? '#00ba7c' : '#00843f', yellow: dark ? '#ffd400' : '#8a6700',
+    blue: dark ? '#1d9bf0' : '#1a6fb0', magenta: dark ? '#f91880' : '#b0105e', cyan: dark ? '#4fd3e7' : '#0e7490',
+    white: dark ? '#e7e9ea' : '#cfd9de', brightWhite: '#ffffff',
   };
 }
 
@@ -660,6 +622,7 @@ function registerTerm(T, sid, kind = 'term') {
 }
 
 function onTermData(sid, data) {
+  noteActivity(sid);
   const s = sessions.get(sid);
   if (s?.term) s.term.xterm.write(data);
   else earlyData.set(sid, [...(earlyData.get(sid) || []), data]);
@@ -695,7 +658,7 @@ function openLocalTerminal() {
 }
 
 function createTermWs({ agentId, local, title, subtitle }) {
-  const ws = { id: 'ws' + Math.random().toString(36).slice(2, 8), agentId, local, title, subtitle, active: 'term', term: null };
+  const ws = { id: 'ws' + Math.random().toString(36).slice(2, 8), since: Date.now(), agentId, local, title, subtitle, active: 'term', term: null };
   ws.reconnectBtn = h('button', { class: 'btn small', hidden: true, onclick: () => reconnect(ws) }, icon('refresh', 14), 'Iniciar de novo');
   ws.titleEl = h('span', { class: 'title' });
   ws.hostEl = h('span', { class: 'host selectable' });
@@ -982,54 +945,140 @@ function terminalHere(ws) {
 }
 
 // ---------------- board ----------------
+// Mission control: everything you can open sits in a launcher strip, and every open session is a live tile
+// with an activity sparkline (output per 2 s over the last minute).
 
 const FONT_BY_COLS = { 1: 13.5, 2: 12.5, 3: 11.5, 4: 10.5, 5: 9.5, 6: 9 };
 const ZOOM_LABEL = { 1: 'Perto', 2: '2 por linha', 3: '3 por linha', 4: '4 por linha', 5: '5 por linha', 6: 'Tudo' };
 
+const activity = new Map();   // sid -> [timestamps of output chunks in the last 60 s]
+
+function noteActivity(sid) {
+  const now = Date.now();
+  let list = activity.get(sid);
+  if (!list) activity.set(sid, list = []);
+  list.push(now);
+  if (list.length > 2000 || list[0] < now - 60000) {
+    const cut = list.findIndex(t => t >= now - 60000);
+    list.splice(0, cut < 0 ? list.length : cut);
+  }
+  if (route === 'board') bumpTile(sid);
+}
+
+function bumpTile(sid) {
+  const head = document.querySelector(`.tile[data-sid="${sid}"] .tile-head`);
+  if (!head) return;
+  head.classList.add('bump');
+  clearTimeout(head._bump);
+  head._bump = setTimeout(() => head.classList.remove('bump'), 120);
+}
+
+function sparkline(sid) {
+  const now = Date.now(), bins = 30, span = 60000 / bins;
+  const counts = new Array(bins).fill(0);
+  for (const t of activity.get(sid) || []) {
+    const i = Math.floor((now - t) / span);
+    if (i >= 0 && i < bins) counts[bins - 1 - i]++;
+  }
+  const max = Math.max(1, ...counts);
+  const svg = s('svg', { class: 'spark', viewBox: `0 0 ${bins * 2.4} 20`, 'aria-hidden': 'true' });
+  counts.forEach((c, i) => {
+    const hgt = c ? Math.max(2, Math.round((c / max) * 18)) : 1;
+    svg.append(s('rect', { x: i * 2.4, y: 20 - hgt, width: 1.6, height: hgt, rx: .6, class: i >= bins - 2 && c ? 'hot' : '' }));
+  });
+  return svg;
+}
+
+function lastActivity(sid) {
+  const list = activity.get(sid);
+  return list?.length ? list[list.length - 1] : null;
+}
+
+function agoShort(ts) {
+  if (!ts) return '';
+  const sec = Math.round((Date.now() - ts) / 1000);
+  if (sec < 3) return 'agora';
+  if (sec < 60) return `há ${sec} s`;
+  return `há ${Math.round(sec / 60)} min`;
+}
+
 function boardItems() {
   const items = [];
   for (const ws of workspaces) {
-    if (ws.term) items.push({ ws, kind: 'term', T: ws.term });
-    if (ws.rdp || ws.vnc) items.push({ ws, kind: 'desktop' });
+    if (ws.term) items.push({ ws, kind: 'term', T: ws.term, sid: ws.term.sid });
+    if (ws.rdp || ws.vnc) items.push({ ws, kind: 'desktop', sid: ws.rdp?.sid || ws.id });
   }
   return items;
+}
+
+// Everything that can still be opened into the board.
+function launchables() {
+  const out = [];
+  for (const c of S.connections) if (!workspaces.some(w => w.connId === c.id))
+    out.push({ kind: 'conn', id: c.id, name: c.name, sub: c.user ? `${c.user}@${c.host}` : c.host,
+      ic: c.os === 'windows' ? 'monitor' : hasDesktop(c) ? 'monitor' : 'server', on: isUp(c.id), run: () => openIntoBoard(() => openConn(c.id)) });
+  for (const a of S.agents) if (!workspaces.some(w => w.agentId === a.id))
+    out.push({ kind: 'agent', id: a.id, name: a.name, sub: a.command, ic: 'bot', on: null, run: () => openIntoBoard(() => openAgent(a.id)) });
+  return out;
+}
+
+// Open something, then come straight back to the board so it shows up as a tile.
+function openIntoBoard(fn) {
+  fn();
+  setTimeout(() => go('board'), 60);
 }
 
 function renderBoard() {
   const root = $('#view-board');
   const items = boardItems();
+  const open = launchables();
   const zoom = h('div', { class: 'zoom' },
     h('button', { class: 'zbtn', title: 'Afastar e ver mais de uma vez (Ctrl+roda do mouse)', disabled: boardCols >= 6, onclick: () => setCols(boardCols + 1) }, icon('minus', 14)),
     h('span', null, ZOOM_LABEL[boardCols]),
     h('button', { class: 'zbtn', title: 'Aproximar', disabled: boardCols <= 1, onclick: () => setCols(boardCols - 1) }, icon('plus', 14)));
+  const live = items.filter(it => !(it.kind === 'term' ? it.T.ended : (it.ws.rdp?.ended || it.ws.vnc?.ended))).length;
   const head = h('div', { class: 'board-head' },
-    h('span', { class: 'hint' }, items.length ? 'Digite direto em qualquer quadro. Clique duas vezes no título para assumir em tela cheia.' : ''),
-    S.agents.length ? h('button', { class: 'btn small', onclick: startAllAgents }, icon('play', 14), 'Abrir todos os agentes') : null,
-    h('button', { class: 'btn small', onclick: openLocalTerminal }, icon('term', 14), 'Terminal do Windows'),
-    zoom);
+    h('h2', null, 'Quadro'),
+    h('span', { class: 'hint' }, items.length
+      ? `${live} ${live === 1 ? 'sessão ao vivo' : 'sessões ao vivo'}. Digite direto em qualquer quadro; clique duas vezes no título para assumir.`
+      : 'Tudo o que estiver aberto aparece aqui, lado a lado e ao vivo.'),
+    h('button', { class: 'btn small', onclick: () => openIntoBoard(openLocalTerminal) }, icon('term', 14), 'Terminal'),
+    items.length ? zoom : null);
 
   if (!items.length) {
-    root.replaceChildren(head, h('div', { class: 'empty' },
-      h('div', null, 'Nada aberto. O que você abrir aparece aqui, lado a lado.'),
-      h('div', { class: 'row' },
-        S.agents.length ? h('button', { class: 'btn primary', onclick: startAllAgents }, icon('play'), 'Abrir todos os agentes') : h('button', { class: 'btn primary', onclick: () => editAgent() }, icon('plus'), 'Novo agente'),
-        h('button', { class: 'btn', onclick: () => go('home') }, 'Ver conexões'))));
+    const cards = open.map((o, i) => h('button', { class: 'launch-card', style: { '--i': i }, onclick: o.run },
+      h('span', { class: 'ic' }, icon(o.ic, 22)),
+      h('span', null, h('b', null, o.name), h('small', null, o.sub)),
+      h('span', { class: 'go' }, icon('play', 16))));
+    root.replaceChildren(head, h('div', { class: 'board-empty' },
+      h('p', null, open.length ? 'Escolha o que abrir. Dá para abrir vários e acompanhar todos de uma vez.' : 'Salve uma conexão ou um agente no Início para montar o quadro.'),
+      open.length ? h('div', { class: 'launch-grid' }, cards) : null,
+      S.agents.length > 1 ? h('div', null, h('button', { class: 'btn primary', onclick: startAllAgents }, icon('play', 16), 'Abrir todos os agentes')) : null));
     return;
   }
 
+  const launch = open.length ? h('div', { class: 'launch' },
+    h('span', { class: 'lbl' }, 'Abrir também'),
+    open.map(o => h('button', { class: 'chip-l', onclick: o.run, title: o.sub },
+      o.kind === 'conn' ? h('span', { class: 'led' + (o.on ? ' on' : '') }) : icon('bot', 14), o.name))) : null;
+
   const rows = Math.ceil(items.length / boardCols);
-  const tiles = h('div', { class: 'tiles', style: { '--cols': boardCols, '--row-h': rows <= 2 ? '1fr' : `${Math.max(180, 900 / boardCols)}px` } });
-  for (const it of items) {
+  const tiles = h('div', { class: 'tiles', style: { '--cols': boardCols, '--row-h': rows <= 2 ? '1fr' : `${Math.max(200, 900 / boardCols)}px` } });
+  items.forEach((it, i) => {
     const body = h('div', { class: 'tile-body' });
     const takeOver = () => { if (it.kind === 'desktop') setView(it.ws, 'desktop'); else if (it.ws.connId) setView(it.ws, 'term'); go(it.ws.id); };
     const ended = it.kind === 'term' ? it.T.ended : (it.ws.rdp?.ended || it.ws.vnc?.ended);
-    const where = it.ws.connId ? (conn(it.ws.connId)?.host || '') : (it.ws.subtitle || '');
-    tiles.append(h('div', { class: 'tile' },
+    const c = it.ws.connId ? conn(it.ws.connId) : null;
+    const where = c ? (c.user ? `${c.user}@${c.host}` : c.host) : (it.ws.subtitle || '');
+    const last = lastActivity(it.sid);
+    tiles.append(h('div', { class: 'tile', 'data-sid': it.sid, style: { '--i': i } },
       h('div', { class: 'tile-head', ondblclick: takeOver },
-        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--folha-4)' : (it.ws.color || '') } }),
+        h('span', { class: 'dot' + (ended ? '' : ' live'), style: { '--c': ended ? 'var(--tinta-4)' : (it.ws.color || '') } }),
         h('span', { class: 'name' }, it.ws.title),
-        h('span', { class: 'where' }, it.kind === 'desktop' ? 'tela' : where),
+        h('span', { class: 'where' }, it.kind === 'desktop' ? 'tela remota' : where),
         h('span', { class: 'spacer' }),
+        it.kind === 'term' && !ended ? sparkline(it.sid) : null,
+        it.kind === 'term' ? h('span', { class: 'ago' + (last && Date.now() - last < 3000 ? ' now' : ''), 'data-ago': it.sid }, ended ? 'encerrado' : agoShort(last)) : null,
         h('button', { class: 'btn icon ghost small', title: 'Assumir em tela cheia', onclick: takeOver }, icon('maximize', 14)),
         h('button', { class: 'btn icon ghost small', title: 'Fechar', onclick: () => closeWs(it.ws) }, icon('x', 14))),
       body));
@@ -1037,13 +1086,34 @@ function renderBoard() {
       it.T.xterm.options.fontSize = FONT_BY_COLS[boardCols];
       body.append(it.T.el);
     } else {
-      body.append(h('div', { class: 'tile-placeholder', onclick: takeOver },
-        h('div', null, icon('monitor', 22), h('div', { style: { marginTop: '8px' } }, ended ? 'Sessão encerrada' : 'Área de trabalho remota. Clique para abrir.'))));
+      const since = it.ws.since ? Math.round((Date.now() - it.ws.since) / 60000) : 0;
+      body.append(h('div', { class: 'tile-desk' + (ended ? '' : ' live'), onclick: takeOver },
+        h('div', { class: 'box' },
+          h('span', { class: 'big' }, icon('monitor', 26)),
+          h('b', null, ended ? 'Sessão encerrada' : 'Área de trabalho ao vivo'),
+          h('small', null, ended ? 'Clique para reconectar.' : `${where}${since ? `, aberta há ${since} min` : ''}. A tela remota só aparece na aba dela.`),
+          h('span', { class: 'btn small' }, icon('maximize', 14), ended ? 'Abrir' : 'Assumir'))));
     }
-  }
-  root.replaceChildren(head, tiles);
+  });
+  root.replaceChildren(head, launch, tiles);
   requestAnimationFrame(() => items.forEach(it => { if (it.T) try { it.T.fit.fit(); } catch { } }));
 }
+
+// keep sparklines and "há X s" fresh while the board is on screen
+setInterval(() => {
+  if (route !== 'board' || document.hidden) return;
+  for (const tile of document.querySelectorAll('.tile[data-sid]')) {
+    const sid = tile.dataset.sid;
+    const old = tile.querySelector('.spark');
+    if (old) old.replaceWith(sparkline(sid));
+    const ago = tile.querySelector('[data-ago]');
+    if (ago && ago.textContent !== 'encerrado') {
+      const last = lastActivity(sid);
+      ago.textContent = agoShort(last);
+      ago.classList.toggle('now', !!last && Date.now() - last < 3000);
+    }
+  }
+}, 2000);
 
 function setCols(n) {
   boardCols = Math.min(6, Math.max(1, n));
@@ -1116,7 +1186,7 @@ function confirmBox(title, text, okLabel = 'Confirmar') {
   return new Promise(resolve => {
     let done = false;
     const finish = v => { if (done) return; done = true; resolve(v); close(); };
-    const close = modal(title, h('div', { style: { color: 'var(--folha-2)' } }, text), [
+    const close = modal(title, h('div', { style: { color: 'var(--tinta-2)' } }, text), [
       h('span', { class: 'spacer' }),
       h('button', { class: 'btn', onclick: () => finish(false) }, 'Cancelar'),
       h('button', { class: 'btn primary', onclick: () => finish(true) }, okLabel)]);

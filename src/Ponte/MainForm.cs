@@ -355,7 +355,8 @@ public sealed class MainForm : Form
     }
 
     /// <summary>Is each machine answering on the port Ponte would use? A plain TCP connect, 1.5 s each, all in parallel.</summary>
-    async Task<Dictionary<string, bool>> Probe()
+    /// <summary>Returns the connect time in milliseconds per connection, or -1 when the port did not answer.</summary>
+    async Task<Dictionary<string, int>> Probe()
     {
         var checks = _store.Data.Connections.Select(async c =>
         {
@@ -363,8 +364,9 @@ public sealed class MainForm : Form
             var (host, port) = Ssh.SplitHost(c.Host, fallback);
             using var tcp = new System.Net.Sockets.TcpClient();
             using var cts = new CancellationTokenSource(1500);
-            try { await tcp.ConnectAsync(host, port, cts.Token); return (c.Id, true); }
-            catch { return (c.Id, false); }
+            var sw = Stopwatch.StartNew();
+            try { await tcp.ConnectAsync(host, port, cts.Token); return (c.Id, (int)sw.ElapsedMilliseconds); }
+            catch { return (c.Id, -1); }
         });
         return (await Task.WhenAll(checks)).ToDictionary(r => r.Item1, r => r.Item2);
     }

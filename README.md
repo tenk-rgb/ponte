@@ -15,11 +15,11 @@ Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domín
 
 ## Visual
 
-O desenho mistura Mata Atlântica com placa de circuito. O fundo é verde-floresta, e o amarelo-maracujá marca o que está vivo: máquinas que respondem, agentes rodando e a ação principal. Os detalhes vêm de eletrônica: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. No Início, um mapa da rede mostra cada máquina ligada a "Este PC" e acende as que respondem. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
+Preto e cinza, como o X e o ChatGPT: fundo preto no tema escuro e branco no claro, superfícies em cinza, botão principal invertido e verde só para o que está vivo (máquina respondendo, agente rodando). Os detalhes vêm de placa de circuito: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. Os ícones são do Lucide. No Início, o painel Rede mostra o tempo de resposta de cada máquina em milissegundos. O Quadro é um painel de controle: tudo o que dá para abrir fica numa faixa, e cada sessão aberta vira um bloco ao vivo com um gráfico de atividade. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.3.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.4.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 
