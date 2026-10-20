@@ -19,7 +19,7 @@ Preto e cinza, como o X e o ChatGPT: fundo preto no tema escuro e branco no clar
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.5.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+Rode `artifacts\Ponte-Setup-1.5.1.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
 
 ## Compilar
 

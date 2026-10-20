@@ -189,7 +189,8 @@ main { flex: 1; min-height: 0; position: relative; }
 /* ---------- home ---------- */
 .home { padding: 0 32px 64px; }
 .home-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); gap: 48px; align-items: start; }
-.home-main, .home-side { min-width: 0; }
+.home-main, .home-side, .panel, .reach, .agents { min-width: 0; }
+.recent, .agent, .launch-card { min-width: 0; overflow: hidden; }
 .home-side { position: sticky; top: 0; padding-top: 48px; display: grid; gap: 24px; }
 @media (max-width: 1000px) { .home-inner { grid-template-columns: 1fr; gap: 0; } .home-side { position: static; } }
 
