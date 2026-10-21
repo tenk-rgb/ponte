@@ -82,7 +82,11 @@ public static class Updater
         }
         // PONTE_UPDATE_DRYRUN stops here, so the flow can be tested without replacing the installed copy.
         if (Environment.GetEnvironmentVariable("PONTE_UPDATE_DRYRUN") == "1") return path;
-        Process.Start(new ProcessStartInfo(path, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS") { UseShellExecute = true });
+        // Start the installer with a clean environment: test switches must not reach the copy it reopens.
+        var psi = new ProcessStartInfo(path, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS") { UseShellExecute = false };
+        foreach (var v in new[] { "PONTE_DEV", "PONTE_FAKE_VERSION", "PONTE_UPDATE_DRYRUN", "PONTE_OFFSCREEN", "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS" })
+            psi.Environment.Remove(v);
+        Process.Start(psi);
         return path;
     }
 }
