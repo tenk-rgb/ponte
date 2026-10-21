@@ -109,6 +109,7 @@ h1, h2 { text-wrap: balance; }
 body.max .resize-top { display: none; }
 
 .brand { display: flex; align-items: center; gap: 8px; padding-right: 16px; color: var(--acento); flex: none; }
+.brand-icon { flex: none; display: block; }
 .brand b { font-weight: 700; font-size: 16px; letter-spacing: -.01em; color: var(--tinta); }
 
 .tabs { display: flex; align-items: stretch; min-width: 0; flex: 1; overflow-x: auto; scrollbar-width: none; }
@@ -122,20 +123,26 @@ body.max .resize-top { display: none; }
 .tab.fixed { flex: none; min-width: 0; }
 .tab:hover { color: var(--tinta); }
 .tab.active { color: var(--tinta); font-weight: 650; }
-/* the active tab is a lit trace with a node in the middle */
-.tab.active::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 2px; background: var(--acento); }
-.tab.active::before { content: ""; position: absolute; left: 50%; bottom: -3px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--acento); border-radius: 1px; }
+/* hover and active tabs sit on a rounded pill; the active one is lifted off the bar */
+.tab { isolation: isolate; }
+.tab::before {
+  content: ""; position: absolute; inset: 7px 2px; border-radius: 10px; z-index: -1;
+  background: transparent; transition: background .15s var(--sai), box-shadow .15s var(--sai);
+}
+.tab:hover::before { background: var(--acento-suave); }
+.tab.active::before {
+  background: var(--placa-alta);
+  box-shadow: inset 0 0 0 1px var(--linha-forte), 0 1px 2px rgb(0 0 0 / .08);
+}
 .tab .name { overflow: hidden; text-overflow: ellipsis; }
 .tab .close {
-  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
   width: 20px; height: 20px; border-radius: 6px; display: none; place-items: center;
-  color: var(--tinta-3); background: var(--placa);
+  color: var(--tinta-3); background: transparent;
 }
 .tab:hover .close, .tab.active .close { display: grid; }
-.tab.active:not(.fixed) { padding-right: 28px; }
-.tab.active:not(.fixed)::after { right: 28px; }
-.tab.active:not(.fixed)::before { left: calc(50% - 8px); }
-.tab .close:hover { background: var(--fundo); color: var(--tinta); }
+.tab.active:not(.fixed) { padding-right: 32px; }
+.tab .close:hover { background: var(--acento-suave); color: var(--tinta); }
 .tab .count { font-size: 12px; color: var(--sinal); font-weight: 700; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--tinta-4)); flex: none; }
 .dot.live { background: var(--c, var(--sinal)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, var(--sinal)) 28%, transparent); }
