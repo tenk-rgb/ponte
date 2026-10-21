@@ -329,7 +329,7 @@ function renderSide() {
         S.agents.length > 1 ? h('button', { class: 'btn ghost small', onclick: startAllAgents, title: 'Abrir todos no quadro' }, icon('play', 16), 'Todos') : null,
         h('button', { class: 'btn small', onclick: () => editAgent() }, icon('plus', 16), 'Novo')),
       S.agents.length ? h('div', { class: 'agents' }, agents)
-        : h('div', { class: 'empty-line' }, 'Claude Code, Codex, Gemini ou qualquer programa de terminal, no seu PC ou num servidor Linux.'))].filter(Boolean));
+        : h('div', { class: 'empty-line' }, 'Agentes de IA ou qualquer programa de terminal, no seu PC ou num servidor Linux.'))].filter(Boolean));
 }
 
 // keep the agents' tails live while Início is on screen
@@ -1299,7 +1299,7 @@ function editConnection(existing, prefill) {
 
 function editAgent(existing) {
   const a = existing ? { ...existing } : { id: '', name: '', command: 'claude', cwd: '', target: 'local' };
-  const nameInput = h('input', { value: a.name, placeholder: 'Ex.: Claude no projeto X', oninput: e => { a.name = e.target.value; } });
+  const nameInput = h('input', { value: a.name, placeholder: 'Ex.: Agente do projeto X', oninput: e => { a.name = e.target.value; } });
   const cmdInput = h('input', { value: a.command, spellcheck: 'false', oninput: e => { a.command = e.target.value; drawChips(); } });
   const chips = h('div', { class: 'chips' });
   const drawChips = () => chips.replaceChildren(...AGENT_PRESETS.map(p => h('button', {
@@ -1349,7 +1349,7 @@ function newMenu() {
     icon(ic, 22), h('div', null, h('b', null, title), h('small', null, sub)));
   close = modal('Criar', [
     item('monitor', 'Conexão', 'Windows ou Linux: tela, terminal e arquivos', () => editConnection()),
-    item('bot', 'Agente', 'Claude Code, Codex, Gemini ou outro programa', () => editAgent()),
+    item('bot', 'Agente', 'Um agente de IA ou outro programa de terminal', () => editAgent()),
     item('term', 'Terminal do Windows', 'PowerShell neste PC, sem salvar', openLocalTerminal),
   ], [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: () => close() }, 'Fechar')]);
 }

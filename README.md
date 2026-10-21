@@ -1,49 +1,152 @@
-# Ponte
+<div align="center">
 
-Acesso remoto a máquinas Windows e Linux, e um quadro para os seus agentes de IA, num app só.
+<img src="docs/logo.png" width="112" alt="Ponte">
 
-## O que faz
+# Ponte — Remote Desktop Management
 
-- Abre a área de trabalho de máquinas Windows por RDP, dentro da janela do app. Também abre Linux por RDP (xrdp) ou VNC.
-- Na mesma conexão Linux tem terminal SSH e gerenciador de arquivos (SFTP). Dá para arrastar arquivos do Explorer para o servidor, baixar, renomear, criar pastas e abrir o terminal na pasta em que você está.
-- Roda agentes como Claude Code, Codex e Gemini, ou qualquer programa de terminal, no seu PC ou num servidor Linux. O Quadro mostra todos lado a lado, ao vivo. Você digita em qualquer um ou clica duas vezes no título para assumir em tela cheia.
-- Ditado por voz: clique no microfone e fale. O texto é digitado no último terminal em que você clicou.
-- Importa e exporta as configurações como um backup (.json).
-- Não tem barra lateral. As abas ficam numa faixa fina no topo e o resto da tela é da sessão. Ctrl+K busca qualquer conexão ou agente.
+Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
+Área de trabalho remota, terminal e arquivos na mesma conexão, sem barra lateral ocupando a tela.
 
-Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domínio e o resto ficam em "Mais opções".
+![Versão](https://img.shields.io/badge/versão-1.7.0-0a5fe6?style=flat-square)
+![Beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)
+![Windows](https://img.shields.io/badge/Windows-10%20e%2011%20·%2064%20bits-16181c?style=flat-square)
+![Licença](https://img.shields.io/badge/licença-MIT-16181c?style=flat-square)
 
-## Visual
+<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.7.0-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
+&nbsp;
+<a href="https://github.com/tenk-rgb/ponte/releases"><img src="docs/todas-versoes.svg" alt="Todas as versões" height="64"></a>
 
-Preto e cinza, como o X e o ChatGPT: fundo preto no tema escuro e branco no claro, superfícies em cinza, botão principal invertido e verde só para o que está vivo (máquina respondendo, agente rodando). Os detalhes vêm de placa de circuito: cantos chanfrados, LEDs em losango para o status e uma trilha acesa na aba ativa. Os ícones das máquinas, dos agentes e das telas são um conjunto próprio em SVG (`design/icons`), com o canto chanfrado e o losango do app; as ações genéricas usam o Lucide. No Início, o painel Rede mostra o tempo de resposta de cada máquina em milissegundos. O Quadro é um painel de controle: tudo o que dá para abrir fica numa faixa, e cada sessão aberta vira um bloco ao vivo com um gráfico de atividade. A fonte é a Bricolage Grotesque (licença OFL, em `wwwroot/fonts`). A barra de título, com minimizar, maximizar e fechar, é desenhada pelo próprio app. Segue o tema claro ou escuro do Windows.
+</div>
+
+> [!WARNING]
+> **Versão beta.** O Ponte já é usado no dia a dia, mas ainda pode ter falhas. Faça um backup das suas conexões em **Ajustes › Exportar** e conte o que encontrar em [Issues](https://github.com/tenk-rgb/ponte/issues).
+
+<br>
+
+<p align="center">
+  <img src="docs/inicio.png" alt="Tela inicial do Ponte" width="900">
+</p>
+
+## Sumário
+
+- [Instalar](#instalar)
+- [Primeiros passos](#primeiros-passos)
+- [O que dá para fazer](#o-que-dá-para-fazer)
+- [Atalhos de teclado](#atalhos-de-teclado)
+- [Perguntas frequentes](#perguntas-frequentes)
+- [Versões](#versões)
+- [Para desenvolvedores](#para-desenvolvedores)
 
 ## Instalar
 
-Rode `artifacts\Ponte-Setup-1.7.0.exe`. Ele instala só para o seu usuário, sem pedir administrador, e já inclui o .NET. Precisa do WebView2, que vem com o Windows 10 e 11.
+1. Clique em **Baixar para Windows** acima.
+2. Abra o arquivo `Ponte-Setup.exe`.
+3. Se o Windows mostrar **"O Windows protegeu o computador"**, clique em **Mais informações** e depois em **Executar assim mesmo**. O aviso aparece porque o instalador ainda não tem assinatura digital, o que é comum em versões beta.
+4. Avance até o fim. O Ponte instala só para o seu usuário e **não pede senha de administrador**.
 
-## Compilar
+| Requisito | |
+|---|---|
+| Sistema | Windows 10 ou 11, 64 bits |
+| Espaço | cerca de 150 MB |
+| Internet | só para conectar às suas máquinas; o app não envia nada para fora |
+
+Para atualizar, baixe a versão nova e instale por cima. Suas conexões continuam salvas.
+
+## Primeiros passos
+
+**1. Salve uma máquina.** Clique em **Nova** (ou `Ctrl+N`). Preencha nome, sistema (Windows ou Linux), endereço, usuário e senha. Portas e o resto ficam em "Mais opções" e já vêm preenchidos.
+
+**2. Conecte.** No campo **Conectar**, digite o nome ou o endereço e aperte `Enter`. Se o endereço ainda não estiver salvo, o formulário abre já preenchido.
+
+**3. Use as abas da conexão.** Cada máquina abre numa aba com até três visões:
+
+| Visão | Para quê |
+|---|---|
+| **Tela** | A área de trabalho remota, dentro da janela do app |
+| **Terminal** | Linha de comando na máquina (Linux, ou Windows com SSH) |
+| **Arquivos** | Navegar, enviar, baixar, renomear e apagar arquivos. Arraste arquivos do seu PC para enviar |
+
+**4. Acompanhe tudo no Quadro.** A aba **Quadro** mostra todas as sessões abertas lado a lado, ao vivo.
+
+## O que dá para fazer
+
+- **Área de trabalho remota** de máquinas Windows e Linux, sem abrir outra janela.
+- **Terminal e arquivos na mesma conexão Linux**, com arrastar e soltar do seu PC para o servidor.
+- **Agentes de IA e terminais** rodando no seu PC ou num servidor Linux. Cada agente mostra as últimas linhas no Início; no Quadro dá para digitar em qualquer um.
+- **Painel Rede**, que mostra quais máquinas estão respondendo e em quantos milissegundos.
+- **Busca rápida** com `Ctrl+K` para achar qualquer conexão, agente ou ação.
+- **Ditado por voz**: clique no microfone e fale; o texto vai para o terminal.
+- **Backup**: exporte e importe todas as conexões e agentes em **Ajustes**.
+- **Tema claro e escuro**, seguindo o Windows.
+
+<p align="center">
+  <img src="docs/quadro.png" alt="Quadro com sessões ao vivo" width="900">
+</p>
+
+## Atalhos de teclado
+
+| Atalho | Ação |
+|---|---|
+| `Ctrl+K` | Buscar conexão, agente ou ação |
+| `Ctrl+N` | Nova conexão |
+| `Ctrl+1` / `Ctrl+2` | Ir para Início / Quadro |
+| `Ctrl+3` em diante | Ir para cada aba aberta |
+| `Ctrl+Tab` | Próxima aba |
+| `Ctrl+Shift+W` | Fechar a aba atual |
+| `Ctrl` + roda do mouse | Afastar ou aproximar o Quadro |
+
+## Perguntas frequentes
+
+<details>
+<summary><b>Onde ficam minhas senhas?</b></summary>
+<br>
+No seu computador, em <code>%APPDATA%\Ponte</code>, criptografadas e presas ao seu usuário do Windows. Ninguém mais consegue abri-las, nem copiando o arquivo para outro PC.
+</details>
+
+<details>
+<summary><b>Uma máquina aparece como "sem resposta". Por quê?</b></summary>
+<br>
+O Ponte testa a porta de cada máquina a cada 30 segundos. Se ela fica numa VPN ou rede da empresa, conecte essa rede primeiro. Também vale conferir se a máquina está ligada e se a porta (RDP 3389, SSH 22) está liberada no firewall.
+</details>
+
+<details>
+<summary><b>O ditado por voz não funciona.</b></summary>
+<br>
+Ligue <b>Reconhecimento de fala online</b> em Configurações do Windows › Privacidade e segurança › Fala, e permita o uso do microfone por aplicativos da área de trabalho.
+</details>
+
+<details>
+<summary><b>Apareceu um aviso de certificado ao conectar numa máquina Windows.</b></summary>
+<br>
+É normal na primeira conexão com servidores que usam certificado próprio. Confira se o nome da máquina está certo e aceite.
+</details>
+
+<details>
+<summary><b>Como levo minhas conexões para outro computador?</b></summary>
+<br>
+Em <b>Ajustes › Exportar</b> você gera um backup <code>.json</code>. No outro PC, use <b>Ajustes › Importar configurações</b>. As senhas precisam ser digitadas de novo, porque ficam presas ao usuário do Windows de origem.
+</details>
+
+## Versões
+
+| Versão | Data | Novidades |
+|---|---|---|
+| **1.7.0 beta** | 21/10/2026 | Primeira versão pública. Logo nova, importar e exportar configurações, Quadro com atividade ao vivo, painel Rede com latência, visual preto e cinza. |
+
+Todas as versões e instaladores estão na página de [Releases](https://github.com/tenk-rgb/ponte/releases).
+
+## Para desenvolvedores
 
 Requer o .NET 10 SDK e o Inno Setup 6.
 
 ```powershell
-.\build.ps1
+git clone https://github.com/tenk-rgb/ponte.git
+cd ponte
+.\build.ps1          # gera artifacts\Ponte-Setup-<versão>.exe
 ```
 
-O instalador sai em `artifacts\`. Para rodar em modo de desenvolvimento, use `dotnet run --project src\Ponte`. Com a variável `PONTE_DEV=1` as ferramentas de desenvolvedor do WebView2 ficam ligadas.
+Para rodar sem instalar: `dotnet run --project src\Ponte`.
 
-## Como funciona
+## Licença
 
-| Parte | Tecnologia |
-|---|---|
-| Janela | WinForms (.NET 10) com WebView2. A interface inteira é HTML/CSS/JS em `src/Ponte/wwwroot`. |
-| RDP | Controle ActiveX de Área de Trabalho Remota do Windows (o mesmo do mstsc), embutido na janela. |
-| SSH e SFTP | SSH.NET. A chave de cada servidor é guardada na primeira conexão; se mudar, o Ponte recusa e avisa. |
-| VNC | noVNC na interface, com uma ponte WebSocket local para TCP. |
-| Agentes locais | Pseudo console do Windows (ConPTY) e xterm.js. |
-| Voz | Reconhecimento de fala do Windows. |
-| Senhas | Criptografadas com DPAPI, presas ao seu usuário do Windows, em `%APPDATA%\Ponte\data.json`. |
-
-## Limites conhecidos
-
-- O ditado precisa do "Reconhecimento de fala online" ligado em Configurações > Privacidade > Fala.
-- Na primeira conexão RDP a um servidor com certificado próprio, o Windows mostra o aviso de certificado dele.
+[MIT](LICENSE) © 2026 Ruan Rodrigues Fermino

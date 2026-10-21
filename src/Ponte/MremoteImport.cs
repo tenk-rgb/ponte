@@ -9,7 +9,7 @@ using Org.BouncyCastle.Crypto;
 namespace Ponte;
 
 /// <summary>
-/// Reads mRemoteNG's confCons.xml (ConfVersion 2.6). Format and crypto recovered with REA from mRemoteNG 1.76:
+/// Reads a legacy confCons.xml connections file (ConfVersion 2.6):
 /// AES-GCM, PBKDF2-SHA1 key from the default password "mR3m", payload = salt(16) | nonce(16) | ciphertext+tag,
 /// with the salt also used as associated data.
 /// </summary>
