@@ -254,26 +254,83 @@ function machineIcon(c) {
   return hasDesktop(c) ? 'pc' : 'server';
 }
 
+// ----- groups: one collapse state shared by the list and the Rede panel, remembered between runs -----
+let collapsedGroups = {};
+try { collapsedGroups = JSON.parse(localStorage.getItem('ponte.groups') || '{}'); } catch { }
+
+// With many machines, groups start collapsed; a group the user opened or closed keeps that choice.
+function isCollapsed(group) {
+  return group in collapsedGroups ? collapsedGroups[group] : S.connections.length > 12;
+}
+
+function setCollapsed(groups, value) {
+  for (const g of groups) collapsedGroups[g] = value;
+  try { localStorage.setItem('ponte.groups', JSON.stringify(collapsedGroups)); } catch { }
+  renderHome();
+}
+
+function groupStats(items) {
+  const up = items.filter(c => isUp(c.id));
+  const checked = items.filter(c => reach.has(c.id)).length;
+  const avg = up.length ? Math.round(up.reduce((s, c) => s + reach.get(c.id), 0) / up.length) : null;
+  return { total: items.length, up: up.length, down: checked - up.length, checked, avg };
+}
+
+function statsLine(st) {
+  const machines = `${st.total} ${st.total === 1 ? 'máquina' : 'máquinas'}`;
+  if (!st.checked) return h('span', { class: 'gstats' }, h('span', null, machines), h('span', null, 'verificando…'));
+  return h('span', { class: 'gstats' },
+    h('span', null, machines),
+    h('span', { class: 'on' }, h('i', { class: 'led on' }), `${st.up} online`),
+    h('span', { class: 'off' }, h('i', { class: 'led' }), `${st.down} offline`),
+    st.avg != null ? h('span', { class: 'ms' }, `${st.avg} ms`) : null);
+}
+
+const groupLabel = g => g || 'Sem grupo';
+// named groups alphabetically, the ungrouped ones last
+const groupsOf = list => [...Map.groupBy(list, c => c.group || '')].sort((a, b) => (!a[0]) - (!b[0]) || a[0].localeCompare(b[0]));
+
+function reachRow(c) {
+  const ms = reach.get(c.id);
+  const known = reach.has(c.id);
+  const up = isUp(c.id);
+  const pct = up ? Math.max(6, Math.round(100 - Math.min(ms, 1000) / 10)) : 0;
+  return h('button', {
+    class: 'reach-row ' + (up ? 'on' : known ? 'off' : ''), onclick: () => openConn(c.id),
+    title: up ? `${c.name} respondeu em ${ms} ms` : known ? `${c.name} não respondeu` : `${c.name}, ainda verificando`,
+  },
+    icon(machineIcon(c), 18),
+    h('span', { class: 'name' }, c.name),
+    h('span', { class: 'bar' }, h('i', { style: { '--w': pct + '%' } })),
+    h('span', { class: 'ms' }, up ? `${ms} ms` : known ? 'sem resposta' : '…'));
+}
+
+const byReach = (a, b) => {
+  const ua = isUp(a.id), ub = isUp(b.id);
+  if (ua !== ub) return ua ? -1 : 1;
+  return (reach.get(a.id) ?? 9999) - (reach.get(b.id) ?? 9999) || a.name.localeCompare(b.name);
+};
+
 function reachList() {
-  const list = [...S.connections].sort((a, b) => {
-    const ua = isUp(a.id), ub = isUp(b.id);
-    if (ua !== ub) return ua ? -1 : 1;
-    return (reach.get(a.id) ?? 9999) - (reach.get(b.id) ?? 9999) || a.name.localeCompare(b.name);
-  });
-  return h('div', { class: 'reach' }, list.map(c => {
-    const ms = reach.get(c.id);
-    const known = reach.has(c.id);
-    const up = isUp(c.id);
-    const pct = up ? Math.max(6, Math.round(100 - Math.min(ms, 1000) / 10)) : 0;
-    return h('button', {
-      class: 'reach-row ' + (up ? 'on' : known ? 'off' : ''), onclick: () => openConn(c.id),
-      title: up ? `${c.name} respondeu em ${ms} ms` : known ? `${c.name} não respondeu` : `${c.name}, ainda verificando`,
-    },
-      icon(machineIcon(c), 18),
-      h('span', { class: 'name' }, c.name),
-      h('span', { class: 'bar' }, h('i', { style: { '--w': pct + '%' } })),
-      h('span', { class: 'ms' }, up ? `${ms} ms` : known ? 'sem resposta' : '…'));
-  }));
+  const groups = groupsOf(S.connections);
+  if (groups.length <= 1) return h('div', { class: 'reach' }, [...S.connections].sort(byReach).map(reachRow));
+  return h('div', { class: 'reach' }, groups.map(([g, items]) => {
+    const st = groupStats(items);
+    const open = !isCollapsed(g);
+    return [
+      h('button', {
+        class: 'reach-group' + (open ? ' open' : ''), 'aria-expanded': String(open),
+        onclick: () => setCollapsed([g], open),
+        title: open ? 'Recolher' : 'Mostrar as máquinas',
+      },
+        icon('chevron', 16),
+        h('span', { class: 'gtext' }, h('span', { class: 'name' }, groupLabel(g)), statsLine(st)),
+        h('span', { class: 'gright', title: `${st.up} de ${st.total} respondendo` },
+          h('span', { class: 'gms' + (st.avg != null ? ' on' : '') }, st.avg != null ? `${st.avg} ms` : '—'),
+          h('span', { class: 'ratio' }, h('i', { style: { '--w': (st.total ? Math.round(st.up / st.total * 100) : 0) + '%' } })))),
+      open ? h('div', { class: 'reach-children' }, [...items].sort(byReach).map(reachRow)) : null,
+    ];
+  }).flat().filter(Boolean));
 }
 
 function lastLines(T, n = 3) {
@@ -412,6 +469,12 @@ function renderHome() {
   const head = h('div', { class: 'section-head' },
     h('h2', null, q ? 'Resultados' : 'Todas as conexões'),
     h('span', { class: 'spacer' }),
+    !q && groupsOf(S.connections).length > 1 ? (() => {
+      const names = groupsOf(S.connections).map(([g]) => g);
+      const allClosed = names.every(isCollapsed);
+      return h('button', { class: 'btn ghost small', onclick: () => setCollapsed(names, !allClosed) },
+        icon(allClosed ? 'maximize' : 'minus', 16), allClosed ? 'Expandir tudo' : 'Recolher tudo');
+    })() : null,
     !S.connections.length ? h('button', { class: 'btn ghost small', onclick: importConfig }, icon('import', 16), 'Importar configurações') : null,
     h('button', { class: 'btn small', onclick: () => editConnection() }, icon('plus', 16), 'Nova conexão'));
   const body = [];
@@ -423,9 +486,20 @@ function renderHome() {
         h('button', { class: 'btn primary small', onclick: () => quickConnect(q) }, 'Preencher conexão'))
       : h('div', { class: 'empty-line' }, `Nenhuma conexão com "${q}".`));
   } else {
-    const groups = Map.groupBy(list, c => c.group);
+    const groups = groupsOf(list);
     for (const [group, items] of groups) {
-      if (group || groups.size > 1) body.push(h('div', { class: 'group-label' }, group || 'Sem grupo', h('span', null, items.length)));
+      // while searching every group stays open, so a match is never hidden
+      const open = !!q || !isCollapsed(group);
+      if (group || groups.length > 1) {
+        body.push(h('button', {
+          class: 'group-head' + (open ? ' open' : ''), 'aria-expanded': String(open), disabled: !!q,
+          onclick: () => setCollapsed([group], open), title: open ? 'Recolher o grupo' : 'Mostrar as máquinas',
+        },
+          icon('chevron', 16),
+          h('span', { class: 'gname' }, groupLabel(group)),
+          statsLine(groupStats(items))));
+      }
+      if (!open) continue;
       body.push(h('div', { class: 'rows' }, items.map(c => h('div', {
         class: 'row', tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
         onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },

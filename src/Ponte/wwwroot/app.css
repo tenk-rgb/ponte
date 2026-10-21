@@ -191,7 +191,8 @@ main { flex: 1; min-height: 0; position: relative; }
 .home-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); gap: 48px; align-items: start; }
 .home-main, .home-side, .panel, .reach, .agents { min-width: 0; }
 .recent, .agent, .launch-card { min-width: 0; overflow: hidden; }
-.home-side { position: sticky; top: 0; padding-top: 48px; display: grid; gap: 24px; }
+.home-side { position: sticky; top: 0; padding-top: 48px; padding-bottom: 24px; display: grid; gap: 24px; align-content: start;
+  max-height: calc(100vh - var(--bar-h)); overflow-y: auto; scrollbar-width: thin; }
 @media (max-width: 1000px) { .home-inner { grid-template-columns: 1fr; gap: 0; } .home-side { position: static; } }
 
 /* things you act on get a cut corner, like a board edge */
@@ -284,7 +285,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .panel-head .hint { color: var(--tinta-3); font-size: 12px; margin-left: auto; }
 .reach { display: flex; flex-direction: column; }
 .reach-row {
-  display: grid; grid-template-columns: 20px minmax(0, 1fr) 64px 72px; align-items: center; gap: 12px;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) 56px 92px; align-items: center; gap: 12px;
   min-height: 44px; padding: 0 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; border: 0; background: none; color: inherit; text-align: left;
   transition: background-color .12s var(--sai);
 }
@@ -298,6 +299,47 @@ main { flex: 1; min-height: 0; position: relative; }
 .reach-row .bar { height: 4px; border-radius: 2px; background: var(--linha); overflow: hidden; }
 .reach-row .bar i { display: block; height: 100%; width: var(--w, 0%); background: var(--sinal); border-radius: 2px; transition: width .4s var(--sai); }
 .reach-row.off .bar i { width: 0; }
+/* a group in the Rede panel: name over a one-line summary, and the share of machines answering */
+.reach-group {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) 56px; align-items: center; gap: 12px;
+  min-height: 52px; padding: 6px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; border: 0; background: none; color: inherit; text-align: left;
+  transition: background-color .12s var(--sai);
+}
+.reach-group + .reach-group, .reach-children + .reach-group { box-shadow: 0 -1px 0 var(--linha); }
+.reach-group:hover, .reach-group:focus-visible { background: var(--placa-alta); box-shadow: none; }
+.reach-group > .ic { color: var(--tinta-3); transition: transform .15s var(--sai); }
+.reach-group.open > .ic { transform: rotate(90deg); }
+.reach-group .gtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.reach-group .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reach-group .ratio { height: 6px; border-radius: 3px; background: var(--linha); overflow: hidden; }
+.reach-group .ratio i { display: block; height: 100%; width: var(--w, 0%); background: var(--sinal); border-radius: 3px; transition: width .4s var(--sai); }
+.reach-children { padding-left: 20px; margin-bottom: 6px; }
+
+/* group header in the connection list */
+.group-head {
+  display: grid; grid-template-columns: 16px auto minmax(0, 1fr); align-items: center; gap: 12px; width: 100%;
+  min-height: 44px; margin: 12px 0 2px; padding: 0 12px; border: 0; border-radius: 8px; cursor: pointer;
+  background: var(--placa); color: inherit; text-align: left; font: inherit;
+  transition: background-color .12s var(--sai);
+}
+.group-head:hover:not(:disabled) { background: var(--placa-alta); }
+.group-head:disabled { cursor: default; }
+.group-head > .ic { color: var(--tinta-3); transition: transform .15s var(--sai); }
+.group-head.open > .ic { transform: rotate(90deg); }
+.group-head .gname { font-weight: 700; font-size: 13px; white-space: nowrap; }
+.group-head .gstats { justify-content: flex-end; }
+
+.gstats { display: flex; align-items: center; gap: 14px; font-size: 12.5px; color: var(--tinta-3); white-space: nowrap; min-width: 0; overflow: hidden; }
+.gstats .on { color: var(--sinal); font-weight: 650; }
+.gstats .ms { color: var(--tinta-2); font-weight: 600; }
+.gstats .led { display: inline-block; width: 7px; height: 7px; margin-right: 6px; transform: rotate(45deg); border-radius: 1px; box-shadow: inset 0 0 0 1.5px var(--tinta-4); vertical-align: 1px; }
+.gstats .led.on { background: var(--sinal); box-shadow: none; }
+.reach-group .gstats { gap: 10px; font-size: 12px; }
+.reach-group .gstats .ms { display: none; }   /* the average sits on the right, over the bar */
+.reach-group .gright { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.reach-group .gms { font-size: 13px; font-weight: 650; color: var(--tinta-4); text-align: right; white-space: nowrap; }
+.reach-group .gms.on { color: var(--sinal); }
+
 .reach-foot { display: flex; gap: 16px; font-size: 12px; color: var(--tinta-3); margin-top: 8px; }
 .reach-foot span { display: inline-flex; align-items: center; gap: 6px; }
 
