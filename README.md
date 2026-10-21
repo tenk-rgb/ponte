@@ -1,6 +1,6 @@
 # Ponte
 
-Acesso remoto a máquinas Windows e Linux, e um quadro para os seus agentes de IA, num app só. Nasceu para substituir o mRemoteNG com uma tela mais limpa e menos coisa para configurar.
+Acesso remoto a máquinas Windows e Linux, e um quadro para os seus agentes de IA, num app só.
 
 ## O que faz
 
@@ -8,7 +8,7 @@ Acesso remoto a máquinas Windows e Linux, e um quadro para os seus agentes de I
 - Na mesma conexão Linux tem terminal SSH e gerenciador de arquivos (SFTP). Dá para arrastar arquivos do Explorer para o servidor, baixar, renomear, criar pastas e abrir o terminal na pasta em que você está.
 - Roda agentes como Claude Code, Codex e Gemini, ou qualquer programa de terminal, no seu PC ou num servidor Linux. O Quadro mostra todos lado a lado, ao vivo. Você digita em qualquer um ou clica duas vezes no título para assumir em tela cheia.
 - Ditado por voz: clique no microfone e fale. O texto é digitado no último terminal em que você clicou.
-- Importa e exporta as configurações como um backup (.json). O importar também lê o confCons.xml do mRemoteNG, com as senhas.
+- Importa e exporta as configurações como um backup (.json).
 - Não tem barra lateral. As abas ficam numa faixa fina no topo e o resto da tela é da sessão. Ctrl+K busca qualquer conexão ou agente.
 
 Uma conexão pede só nome, sistema, endereço, usuário e senha. Portas, domínio e o resto ficam em "Mais opções".
@@ -43,10 +43,7 @@ O instalador sai em `artifacts\`. Para rodar em modo de desenvolvimento, use `do
 | Voz | Reconhecimento de fala do Windows. |
 | Senhas | Criptografadas com DPAPI, presas ao seu usuário do Windows, em `%APPDATA%\Ponte\data.json`. |
 
-O formato do `confCons.xml` e a criptografia de senhas do mRemoteNG (AES-GCM com PBKDF2-SHA1 a partir da senha padrão "mR3m") foram levantados com o REA, por análise estática do `mRemoteNG.exe` 1.76.
-
 ## Limites conhecidos
 
 - O ditado precisa do "Reconhecimento de fala online" ligado em Configurações > Privacidade > Fala.
-- Telnet, rlogin, HTTP e Citrix ICA do mRemoteNG ficaram de fora.
 - Na primeira conexão RDP a um servidor com certificado próprio, o Windows mostra o aviso de certificado dele.

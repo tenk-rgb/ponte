@@ -1361,7 +1361,7 @@ function settings() {
       h('div', { class: 'with-btn' },
         h('button', { class: 'btn', onclick: () => { close(); importConfig(); } }, icon('import', 14), 'Importar configurações'),
         h('button', { class: 'btn ghost', onclick: () => { close(); exportConfig(); } }, icon('download', 14), 'Exportar')),
-      h('small', null, 'Importa um backup do Ponte (.json) ou o confCons.xml do mRemoteNG. As senhas de um backup só abrem no mesmo PC e usuário do Windows.')),
+      h('small', null, 'Importa um backup do Ponte (.json). As senhas de um backup só abrem no mesmo PC e usuário do Windows.')),
     h('div', { class: 'field' }, h('span', null, 'Chaves de servidores SSH'),
       h('div', null, h('button', { class: 'btn', onclick: async () => { await call('hostkey.forget'); toast('Pronto. Na próxima conexão o Ponte aceita a chave nova.'); } }, icon('key', 14), 'Esquecer chaves salvas')),
       h('small', null, 'Use se um servidor foi reinstalado e o Ponte avisa que a chave mudou.')),
@@ -1403,7 +1403,7 @@ function palette() {
     { ic: 'term', title: 'Terminal do Windows', keys: 'terminal powershell local', run: openLocalTerminal },
     { ic: 'grid', title: 'Quadro', keys: 'quadro board tudo', run: () => go('board') },
     { ic: 'play', title: 'Abrir todos os agentes', keys: 'abrir todos agentes', run: startAllAgents },
-    { ic: 'import', title: 'Importar configurações', keys: 'importar backup mremoteng configuracoes', run: importConfig },
+    { ic: 'import', title: 'Importar configurações', keys: 'importar backup configuracoes', run: importConfig },
     { ic: 'download', title: 'Exportar configurações', keys: 'exportar backup configuracoes', run: exportConfig },
     { ic: 'gear', title: 'Ajustes', keys: 'ajustes configuracoes', run: settings },
   ];
