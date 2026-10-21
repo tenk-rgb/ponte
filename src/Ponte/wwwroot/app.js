@@ -100,6 +100,7 @@ bridge?.addEventListener('message', e => {
     case 'term.data': onTermData(m.sid, m.data); break;
     case 'session.closed': onSessionClosed(m.sid, m.reason); break;
     case 'status': onStatus(m.sid, m.text); break;
+    case 'update.progress': onUpdateProgress(m.pct); break;
     case 'win.state':
       document.body.classList.toggle('max', !!m.max);
       $('#win-max').title = m.max ? 'Restaurar' : 'Maximizar';
@@ -1428,9 +1429,83 @@ function newMenu() {
   ], [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: () => close() }, 'Fechar')]);
 }
 
+// ---------------- updates ----------------
+// Checks the GitHub releases at start-up and every 6 hours. "Agora não" skips that version until a newer one appears.
+
+let updateCard = null;
+let appVersion = '';
+
+async function checkUpdate(manual = false) {
+  try {
+    const { current, available } = await call('update.check');
+    appVersion = current;
+    if (!available) { if (manual) toast(`Você já está na versão mais recente (${current}).`); return null; }
+    let skipped = null;
+    try { skipped = localStorage.getItem('ponte.skipVersion'); } catch { }
+    if (manual || skipped !== available.version) showUpdate(available, current);
+    return available;
+  } catch (err) {
+    if (manual) toast('Não consegui verificar agora. Confira a internet e tente de novo.', { error: true });
+    return null;
+  }
+}
+
+function firstLines(md) {
+  return md.replace(/\*\*|`|\*/g, '').split('\n').map(s => s.replace(/^[-\s]+/, '').trim())
+    .filter(s => s && !/^versão beta\.?$/i.test(s) && !/^como instalar/i.test(s) && !/^requer/i.test(s)).slice(0, 2).join(' ');
+}
+
+function showUpdate(info, current) {
+  updateCard?.remove();
+  const prog = h('div', { class: 'prog', hidden: true }, h('i'));
+  const status = h('p', null, firstLines(info.notes) || 'Correções e melhorias.');
+  const go = h('button', { class: 'btn primary small', disabled: !info.asset }, icon('download', 14), 'Atualizar agora');
+  const card = h('div', { class: 'update', role: 'status' },
+    h('div', { class: 'top' }, icon('download', 18), h('b', null, `Ponte ${info.version} disponível`)),
+    h('small', { style: { color: 'var(--tinta-4)' } }, `Você está na ${current}.`),
+    status, prog,
+    h('div', { class: 'acts' },
+      go,
+      h('button', { class: 'btn ghost small', onclick: () => call('open.url', { url: info.page }) }, 'Novidades'),
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'btn ghost small', onclick: () => {
+        try { localStorage.setItem('ponte.skipVersion', info.version); } catch { }
+        card.remove(); updateCard = null;
+      } }, 'Agora não')));
+  go.onclick = async () => {
+    go.disabled = true;
+    card.querySelectorAll('.acts .btn').forEach(b => { b.disabled = true; });
+    prog.hidden = false;
+    status.textContent = 'Baixando…';
+    try {
+      await call('update.install', { url: info.asset });
+      status.textContent = 'Instalando. O Ponte fecha e abre de novo sozinho.';
+    } catch (err) {
+      status.textContent = 'O download falhou. Tente de novo ou baixe pela página de Novidades.';
+      card.querySelectorAll('.acts .btn').forEach(b => { b.disabled = false; });
+    }
+  };
+  document.body.append(card);
+  updateCard = card;
+}
+
+function onUpdateProgress(pct) {
+  if (!updateCard) return;
+  updateCard.querySelector('.prog i').style.setProperty('--w', pct + '%');
+  const p = updateCard.querySelector('p');
+  if (pct < 100) p.textContent = `Baixando… ${pct}%`;
+}
+
+setTimeout(() => checkUpdate(), 8000);
+setInterval(() => checkUpdate(), 6 * 3600 * 1000);
+
 function settings() {
   let close;
   close = modal('Ajustes', [
+    h('div', { class: 'field' }, h('span', null, 'Versão'),
+      h('div', { class: 'with-btn' },
+        h('button', { class: 'btn', onclick: () => { close(); checkUpdate(true); } }, icon('refresh', 14), 'Procurar atualizações')),
+      h('small', null, `Ponte ${appVersion || S.version || ''} beta. O app avisa sozinho quando sai uma versão nova.`)),
     h('div', { class: 'field' }, h('span', null, 'Configurações'),
       h('div', { class: 'with-btn' },
         h('button', { class: 'btn', onclick: () => { close(); importConfig(); } }, icon('import', 14), 'Importar configurações'),

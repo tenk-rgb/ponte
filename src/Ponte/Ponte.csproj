@@ -10,7 +10,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationIcon>ponte.ico</ApplicationIcon>
     <AssemblyName>Ponte</AssemblyName>
-    <Version>1.8.0</Version>
+    <Version>1.9.0</Version>
     <Product>Ponte</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <NoWarn>$(NoWarn);MSB3277</NoWarn>

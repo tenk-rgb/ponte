@@ -1,6 +1,6 @@
 ; Inno Setup script for Ponte. Build with: build.ps1 (publishes, then compiles this file)
 #define AppName "Ponte"
-#define AppVersion "1.8.0"
+#define AppVersion "1.9.0"
 #define PublishDir "..\artifacts\publish"
 
 [Setup]
@@ -22,6 +22,9 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+; updates run over an open copy: close it, and reopen it after a silent install
+CloseApplications=force
+RestartApplications=no
 
 [Languages]
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -39,3 +42,5 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\Ponte.exe"; Tasks: desktopico
 
 [Run]
 Filename: "{app}\Ponte.exe"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; the in-app updater installs silently and expects the app back afterwards
+Filename: "{app}\Ponte.exe"; Flags: nowait; Check: WizardSilent

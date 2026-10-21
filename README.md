@@ -7,12 +7,12 @@
 Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
 Área de trabalho remota, terminal e arquivos na mesma conexão, sem barra lateral ocupando a tela.
 
-![Versão](https://img.shields.io/badge/versão-1.8.0-0a5fe6?style=flat-square)
+![Versão](https://img.shields.io/badge/versão-1.9.0-0a5fe6?style=flat-square)
 ![Beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)
 ![Windows](https://img.shields.io/badge/Windows-10%20e%2011%20·%2064%20bits-16181c?style=flat-square)
 ![Licença](https://img.shields.io/badge/licença-MIT-16181c?style=flat-square)
 
-<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.8.0-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
+<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.0-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
 &nbsp;
 <a href="https://github.com/tenk-rgb/ponte/releases"><img src="docs/todas-versoes.svg" alt="Todas as versões" height="64"></a>
 
@@ -50,7 +50,7 @@ Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
 | Espaço | cerca de 150 MB |
 | Internet | só para conectar às suas máquinas; o app não envia nada para fora |
 
-Para atualizar, baixe a versão nova e instale por cima. Suas conexões continuam salvas.
+Para atualizar: a partir da 1.9.0 o próprio Ponte avisa quando sai uma versão nova; clique em **Atualizar agora** e ele baixa, instala e reabre sozinho. Também dá para procurar em **Ajustes › Procurar atualizações**. Suas conexões continuam salvas.
 
 ## Primeiros passos
 
@@ -132,7 +132,8 @@ Em <b>Ajustes › Exportar</b> você gera um backup <code>.json</code>. No outro
 
 | Versão | Data | Novidades |
 |---|---|---|
-| **1.8.0 beta** | 21/10/2026 | Grupos recolhíveis na lista e no painel Rede, com resumo de máquinas, online, offline e latência média. |
+| **1.9.0 beta** | 21/10/2026 | O app avisa quando sai versão nova e atualiza com um clique. Correção do botão de abrir nos cards do Quadro. |
+| 1.8.0 beta | 21/10/2026 | Grupos recolhíveis na lista e no painel Rede, com resumo de máquinas, online, offline e latência média. |
 | 1.7.0 beta | 21/10/2026 | Primeira versão pública. Logo nova, importar e exportar configurações, Quadro com atividade ao vivo, painel Rede com latência, visual preto e cinza. |
 
 Todas as versões e instaladores estão na página de [Releases](https://github.com/tenk-rgb/ponte/releases).

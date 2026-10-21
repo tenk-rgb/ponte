@@ -312,6 +312,17 @@ public sealed class MainForm : Form
                 Reply(m, new { path = dlg.FileName });
                 break;
             }
+            case "update.check":
+                Reply(m, new { current = Updater.Current, available = await Updater.Check() });
+                break;
+            case "update.install":
+            {
+                var path = await Updater.DownloadAndRun(Str(m, "url"), 0, pct => Post(new { t = "update.progress", pct }));
+                Reply(m, new { path });
+                // the installer closes and reopens Ponte; leave first so it finds nothing to close
+                if (Environment.GetEnvironmentVariable("PONTE_UPDATE_DRYRUN") != "1") BeginInvoke(Close);
+                break;
+            }
             case "probe":
                 Reply(m, await Probe());
                 break;
@@ -433,6 +444,7 @@ public sealed class MainForm : Form
             hasVncPassword = !string.IsNullOrEmpty(c.VncSecret),
         }),
         agents = _store.Data.Agents,
+        version = Updater.Current,
     };
 
     void PushState() => Post(new { t = "state", data = StateDto() });
