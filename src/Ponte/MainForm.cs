@@ -170,6 +170,12 @@ public sealed class MainForm : Form
                 Reply(m, SaveConnection(m.GetProperty("conn")));
                 PushState();
                 break;
+            case "group.save":
+                ConnectionGroups.Save(_store.Data, Str(m, "originalName"), Str(m, "name"),
+                    m.GetProperty("connectionIds").EnumerateArray().Select(id => id.GetString()!));
+                _store.Save();
+                Reply(m, StateDto());
+                break;
             case "conn.delete":
                 _store.Data.Connections.RemoveAll(c => c.Id == Str(m, "connId"));
                 _store.Save(); Reply(m); PushState();
@@ -287,7 +293,9 @@ public sealed class MainForm : Form
                 {
                     var data = System.Text.Json.JsonSerializer.Deserialize<AppData>(File.ReadAllText(dlg.FileName), Store.Json)
                         ?? throw new InvalidDataException("O arquivo não é um backup do Ponte.");
-                    count = 0;
+                    var newGroups = ConnectionGroups.Names(data).Except(ConnectionGroups.Names(_store.Data), StringComparer.OrdinalIgnoreCase).ToList();
+                    count = newGroups.Count;
+                    _store.Data.Groups.AddRange(newGroups);
                     foreach (var c in data.Connections)
                     {
                         _store.Data.Connections.RemoveAll(x => x.Id == c.Id);
@@ -443,6 +451,7 @@ public sealed class MainForm : Form
             hasPassword = !string.IsNullOrEmpty(c.Secret),
             hasVncPassword = !string.IsNullOrEmpty(c.VncSecret),
         }),
+        groups = ConnectionGroups.Names(_store.Data),
         agents = _store.Data.Agents,
         version = Updater.Current,
     };

@@ -111,7 +111,7 @@ bridge?.addEventListener('message', e => {
 
 // ---------------- state ----------------
 
-const S = { connections: [], agents: [] };
+const S = { connections: [], agents: [], groups: [] };
 const workspaces = [];          // open tabs
 const sessions = new Map();     // sid -> { ws, kind, term? }
 const earlyData = new Map();    // output that arrived before its terminal registered
@@ -261,11 +261,11 @@ try { collapsedGroups = JSON.parse(localStorage.getItem('ponte.groups') || '{}')
 
 // With many machines, groups start collapsed; a group the user opened or closed keeps that choice.
 function isCollapsed(group) {
-  return group in collapsedGroups ? collapsedGroups[group] : S.connections.length > 12;
+  return Object.hasOwn(collapsedGroups, group) ? collapsedGroups[group] : S.connections.length > 12;
 }
 
 function setCollapsed(groups, value) {
-  for (const g of groups) collapsedGroups[g] = value;
+  for (const g of groups) Object.defineProperty(collapsedGroups, g, { value, writable: true, configurable: true, enumerable: true });
   try { localStorage.setItem('ponte.groups', JSON.stringify(collapsedGroups)); } catch { }
   renderHome();
 }
@@ -279,6 +279,7 @@ function groupStats(items) {
 
 function statsLine(st) {
   const machines = `${st.total} ${st.total === 1 ? 'máquina' : 'máquinas'}`;
+  if (!st.total) return h('span', { class: 'gstats' }, 'Grupo vazio');
   if (!st.checked) return h('span', { class: 'gstats' }, h('span', null, machines), h('span', null, 'verificando…'));
   return h('span', { class: 'gstats' },
     h('span', null, machines),
@@ -289,7 +290,11 @@ function statsLine(st) {
 
 const groupLabel = g => g || 'Sem grupo';
 // named groups alphabetically, the ungrouped ones last
-const groupsOf = list => [...Map.groupBy(list, c => c.group || '')].sort((a, b) => (!a[0]) - (!b[0]) || a[0].localeCompare(b[0]));
+const groupsOf = (list, includeEmpty = false) => {
+  const groups = Map.groupBy(list, c => c.group || '');
+  if (includeEmpty) for (const name of S.groups) if (!groups.has(name)) groups.set(name, []);
+  return [...groups].sort((a, b) => (!a[0]) - (!b[0]) || a[0].localeCompare(b[0]));
+};
 
 function reachRow(c) {
   const ms = reach.get(c.id);
@@ -470,37 +475,46 @@ function renderHome() {
   const head = h('div', { class: 'section-head' },
     h('h2', null, q ? 'Resultados' : 'Todas as conexões'),
     h('span', { class: 'spacer' }),
-    !q && groupsOf(S.connections).length > 1 ? (() => {
-      const names = groupsOf(S.connections).map(([g]) => g);
+    !q && groupsOf(S.connections, true).length > 1 ? (() => {
+      const names = groupsOf(S.connections, true).map(([g]) => g);
       const allClosed = names.every(isCollapsed);
       return h('button', { class: 'btn ghost small', onclick: () => setCollapsed(names, !allClosed) },
         icon(allClosed ? 'maximize' : 'minus', 16), allClosed ? 'Expandir tudo' : 'Recolher tudo');
     })() : null,
     !S.connections.length ? h('button', { class: 'btn ghost small', onclick: importConfig }, icon('import', 16), 'Importar configurações') : null,
+    h('button', { class: 'btn ghost small', onclick: () => editGroup() }, icon('folder', 16), 'Novo grupo'),
     h('button', { class: 'btn small', onclick: () => editConnection() }, icon('plus', 16), 'Nova conexão'));
   const body = [];
-  if (!S.connections.length) {
+  if (!S.connections.length && !S.groups.length) {
     body.push(h('div', { class: 'empty-line' }, 'Nenhuma conexão ainda. Uma conexão pede só endereço, usuário e senha.'));
-  } else if (!list.length) {
+  } else if (!list.length && q) {
     body.push(looksLikeHost(q)
       ? h('div', { class: 'quick' }, icon('plus', 18), h('div', { class: 'txt' }, h('b', null, q), ' ainda não está salvo. O formulário abre com o endereço preenchido; falta a senha.'),
         h('button', { class: 'btn primary small', onclick: () => quickConnect(q) }, 'Preencher conexão'))
       : h('div', { class: 'empty-line' }, `Nenhuma conexão com "${q}".`));
   } else {
-    const groups = groupsOf(list);
+    const groups = groupsOf(list, !q);
     for (const [group, items] of groups) {
       // while searching every group stays open, so a match is never hidden
       const open = !!q || !isCollapsed(group);
       if (group || groups.length > 1) {
-        body.push(h('button', {
+        body.push(h('div', { class: 'group-heading' }, h('button', {
           class: 'group-head' + (open ? ' open' : ''), 'aria-expanded': String(open), disabled: !!q,
           onclick: () => setCollapsed([group], open), title: open ? 'Recolher o grupo' : 'Mostrar as máquinas',
         },
           icon('chevron', 16),
           h('span', { class: 'gname' }, groupLabel(group)),
-          statsLine(groupStats(items))));
+          statsLine(groupStats(items))),
+          group ? h('button', {
+            class: 'btn ghost icon small', title: 'Editar grupo', 'aria-label': `Editar grupo ${group}`,
+            onclick: () => editGroup(group),
+          }, icon('edit', 16)) : null));
       }
       if (!open) continue;
+      if (!items.length) {
+        body.push(h('div', { class: 'empty-group' }, 'Este grupo ainda não tem conexões.',
+          h('button', { class: 'btn ghost small', onclick: () => editConnection(null, { group }) }, icon('plus', 14), 'Adicionar conexão')));
+      }
       body.push(h('div', { class: 'rows' }, items.map(c => h('div', {
         class: 'row', tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
         onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
@@ -1285,6 +1299,53 @@ function field(label, input, small) {
   return h('label', { class: 'field' }, h('span', null, label), input, small ? h('small', null, small) : null);
 }
 
+function editGroup(originalName = '') {
+  const selected = new Set(S.connections.filter(c => originalName && c.group === originalName).map(c => c.id));
+  const name = h('input', { value: originalName, placeholder: 'Ex.: Casa, Clientes, Servidores', required: true });
+  const search = h('input', { type: 'search', placeholder: 'Buscar conexão por nome, endereço ou grupo', 'aria-label': 'Buscar conexões do grupo' });
+  const error = h('p', { class: 'group-error', role: 'alert', hidden: true });
+  const counter = h('span', { class: 'hint', 'aria-live': 'polite' });
+  const list = h('div', { class: 'group-members' });
+  const updateCount = () => { counter.textContent = `${selected.size} ${selected.size === 1 ? 'conexão selecionada' : 'conexões selecionadas'}`; };
+  const draw = () => {
+    updateCount();
+    const connections = S.connections.filter(c => matches(c, search.value)).sort((a, b) => a.name.localeCompare(b.name));
+    list.replaceChildren(...connections.map(c => h('label', { class: 'group-member' },
+      h('input', { type: 'checkbox', checked: selected.has(c.id), onchange: e => {
+        e.target.checked ? selected.add(c.id) : selected.delete(c.id);
+        updateCount();
+      } }),
+      h('span', null, h('b', null, c.name), h('small', null, `${c.host} · ${groupLabel(c.group)}`)))));
+    if (!connections.length) list.append(h('div', { class: 'empty-line' }, S.connections.length ? 'Nenhuma conexão encontrada.' : 'Você pode criar o grupo agora e adicionar conexões depois.'));
+  };
+  search.oninput = draw;
+  draw();
+  const save = h('button', { class: 'btn primary', type: 'button', onclick: async () => {
+    if (!name.value.trim()) { error.textContent = 'Digite um nome para o grupo.'; error.hidden = false; name.focus(); return; }
+    save.disabled = true;
+    error.hidden = true;
+    try {
+      const data = await call('group.save', { originalName, name: name.value.trim(), connectionIds: [...selected] });
+      if (originalName && Object.hasOwn(collapsedGroups, originalName)) {
+        Object.defineProperty(collapsedGroups, name.value.trim(), { value: collapsedGroups[originalName], writable: true, configurable: true, enumerable: true });
+        if (originalName !== name.value.trim()) delete collapsedGroups[originalName];
+        try { localStorage.setItem('ponte.groups', JSON.stringify(collapsedGroups)); } catch { }
+      }
+      close();
+      setState(data);
+      toast(originalName ? 'Grupo atualizado.' : 'Grupo criado.');
+    } catch (err) { error.textContent = err.message; error.hidden = false; }
+    finally { save.disabled = false; }
+  } }, originalName ? 'Salvar grupo' : 'Criar grupo');
+  name.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); if (!save.disabled) save.click(); } };
+  const close = modal(originalName ? `Editar grupo ${originalName}` : 'Novo grupo', [
+    field('Nome do grupo', name),
+    h('div', { class: 'field' }, h('span', null, 'Conexões do grupo'),
+      h('small', null, 'Marque as conexões deste grupo. As desmarcadas ficam em Sem grupo; conexões marcadas de outro grupo são movidas para cá.'),
+      search, counter, list), error,
+  ], [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: () => close() }, 'Cancelar'), save]);
+}
+
 function editConnection(existing, prefill) {
   const c = existing ? { ...existing } : {
     id: '', name: '', os: 'linux', host: '', user: '', domain: '', keyPath: '', desktop: 'none', ssh: true,
@@ -1296,7 +1357,7 @@ function editConnection(existing, prefill) {
 
   const passInput = h('input', { type: 'password', placeholder: existing?.hasPassword ? 'Salva. Digite só se quiser trocar.' : '', autocomplete: 'new-password', oninput: e => { password = e.target.value; } });
   const keyInput = inp('keyPath', { placeholder: 'Opcional' });
-  const groups = [...new Set(S.connections.map(x => x.group).filter(Boolean))];
+  const groups = [...new Set([...S.groups, ...S.connections.map(x => x.group).filter(Boolean)])];
   const groupInput = inp('group', { list: 'groups-list', placeholder: 'Opcional, ex.: Casa, Clientes' });
 
   const desktopBox = h('div');
@@ -1424,6 +1485,7 @@ function newMenu() {
     icon(ic, 22), h('div', null, h('b', null, title), h('small', null, sub)));
   close = modal('Criar', [
     item('monitor', 'Conexão', 'Windows ou Linux: tela, terminal e arquivos', () => editConnection()),
+    item('folder', 'Grupo', 'Organize as conexões e crie grupos vazios', () => editGroup()),
     item('bot', 'Agente', 'Um agente de IA ou outro programa de terminal', () => editAgent()),
     item('term', 'Terminal do Windows', 'PowerShell neste PC, sem salvar', openLocalTerminal),
   ], [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: () => close() }, 'Fechar')]);
@@ -1548,6 +1610,7 @@ function palette() {
     ...S.agents.map(a => ({ ic: 'bot', title: a.name, sub: a.command, keys: `agente ${a.name} ${a.command}`, run: () => openAgent(a.id) })),
     ...workspaces.map(ws => ({ ic: 'enter', title: `Ir para ${ws.title}`, sub: 'aba aberta', keys: `aba ${ws.title}`, run: () => go(ws.id) })),
     { ic: 'plus', title: 'Nova conexão', keys: 'nova conexao criar adicionar', run: () => editConnection() },
+    { ic: 'folder', title: 'Novo grupo', keys: 'novo grupo criar organizar', run: () => editGroup() },
     { ic: 'plus', title: 'Novo agente', keys: 'novo agente claude codex gemini', run: () => editAgent() },
     { ic: 'term', title: 'Terminal do Windows', keys: 'terminal powershell local', run: openLocalTerminal },
     { ic: 'grid', title: 'Quadro', keys: 'quadro board tudo', run: () => go('board') },
