@@ -7,12 +7,12 @@
 Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
 Área de trabalho remota, terminal e arquivos na mesma conexão, sem barra lateral ocupando a tela.
 
-![Versão](https://img.shields.io/badge/versão-1.9.1-0a5fe6?style=flat-square)
+![Versão](https://img.shields.io/badge/versão-1.9.2-0a5fe6?style=flat-square)
 ![Beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)
 ![Windows](https://img.shields.io/badge/Windows-10%20e%2011%20·%2064%20bits-16181c?style=flat-square)
 ![Licença](https://img.shields.io/badge/licença-MIT-16181c?style=flat-square)
 
-<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.1-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
+<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.2-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
 &nbsp;
 <a href="https://github.com/tenk-rgb/ponte/releases"><img src="docs/todas-versoes.svg" alt="Todas as versões" height="64"></a>
 
@@ -134,7 +134,8 @@ Em <b>Ajustes › Exportar</b> você gera um backup <code>.json</code>. No outro
 
 | Versão | Data | Novidades |
 |---|---|---|
-| **1.9.1 beta** | 21/10/2026 | A barra de cima mostra o mesmo ícone da barra de tarefas. A aba selecionada ganhou um destaque arredondado. A atualização pelo app reabre o Ponte na versão nova. |
+| **1.9.2 beta** | 28/10/2026 | Atalhos como Alt+Tab e a tecla Windows são enviados à sessão RDP com foco também em modo janela. |
+| 1.9.1 beta | 21/10/2026 | A barra de cima mostra o mesmo ícone da barra de tarefas. A aba selecionada ganhou um destaque arredondado. A atualização pelo app reabre o Ponte na versão nova. |
 | 1.9.0 beta | 21/10/2026 | O app avisa quando sai versão nova e atualiza com um clique. Correção do botão de abrir nos cards do Quadro. |
 | 1.8.0 beta | 21/10/2026 | Grupos recolhíveis na lista e no painel Rede, com resumo de máquinas, online, offline e latência média. |
 | 1.7.0 beta | 21/10/2026 | Primeira versão pública. Logo nova, importar e exportar configurações, Quadro com atividade ao vivo, painel Rede com latência, visual preto e cinza. |
