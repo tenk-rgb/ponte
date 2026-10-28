@@ -1,6 +1,6 @@
 ; Inno Setup script for Ponte. Build with: build.ps1 (publishes, then compiles this file)
 #define AppName "Ponte"
-#define AppVersion "1.9.1"
+#define AppVersion "1.9.2"
 #define PublishDir "..\artifacts\publish"
 
 [Setup]

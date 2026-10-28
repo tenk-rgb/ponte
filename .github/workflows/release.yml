@@ -1,0 +1,73 @@
+name: Publish Windows release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/Ponte/Ponte.csproj
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ponte-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2025
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate release version
+        id: version
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [xml]$project = Get-Content src/Ponte/Ponte.csproj -Raw
+          $version = $project.SelectSingleNode('//PropertyGroup/Version').InnerText
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid project version' }
+          $installer = Get-Content installer/Ponte.iss -Raw
+          if ($installer -notmatch ('#define AppVersion "' + [regex]::Escape($version) + '"')) {
+            throw 'Project and installer versions do not match'
+          }
+          $tag = "v$version-beta"
+          if (-not (Test-Path "docs/releases/$tag.md")) { throw "Missing release notes for $tag" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+      - name: Build self-contained installer
+        run: ./build.ps1
+      - name: Check application version and prepare updater asset
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = Get-Item artifacts/publish/Ponte.exe
+          if ($exe.VersionInfo.ProductVersion.Split('+')[0] -ne $env:RELEASE_VERSION) {
+            throw 'Published application version does not match the release'
+          }
+          $installer = "artifacts/Ponte-Setup-$env:RELEASE_VERSION.exe"
+          if (-not (Test-Path $installer)) { throw 'Installer not found' }
+          Copy-Item $installer artifacts/Ponte-Setup.exe
+      - name: Publish release with installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          gh release create $env:RELEASE_TAG artifacts/Ponte-Setup.exe "artifacts/Ponte-Setup-$env:RELEASE_VERSION.exe" --target $env:RELEASE_COMMIT --title "Ponte $env:RELEASE_VERSION beta" --notes-file "docs/releases/$env:RELEASE_TAG.md" --prerelease
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
