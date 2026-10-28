@@ -7,12 +7,12 @@
 Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
 Área de trabalho remota, terminal e arquivos na mesma conexão, sem barra lateral ocupando a tela.
 
-![Versão](https://img.shields.io/badge/versão-1.9.2-0a5fe6?style=flat-square)
+![Versão](https://img.shields.io/badge/versão-1.9.3-0a5fe6?style=flat-square)
 ![Beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)
 ![Windows](https://img.shields.io/badge/Windows-10%20e%2011%20·%2064%20bits-16181c?style=flat-square)
 ![Licença](https://img.shields.io/badge/licença-MIT-16181c?style=flat-square)
 
-<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.2-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
+<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.3-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
 &nbsp;
 <a href="https://github.com/tenk-rgb/ponte/releases"><img src="docs/todas-versoes.svg" alt="Todas as versões" height="64"></a>
 
@@ -74,6 +74,7 @@ Para atualizar: a partir da 1.9.0 o próprio Ponte avisa quando sai uma versão 
 - **Terminal e arquivos na mesma conexão Linux**, com arrastar e soltar do seu PC para o servidor.
 - **Agentes de IA e terminais** rodando no seu PC ou num servidor Linux. Cada agente mostra as últimas linhas no Início; no Quadro dá para digitar em qualquer um.
 - **Painel Rede**, que mostra quais máquinas estão respondendo e em quantos milissegundos.
+- **Criar e editar grupos**: use **Novo grupo** no Início ou **Nova › Grupo**. O lápis ao lado do nome permite renomear e escolher as conexões do grupo. Grupos vazios ficam salvos e entram no backup. Desmarcar uma conexão a coloca em **Sem grupo**, sem apagar a conexão ou sua senha.
 - **Grupos recolhíveis**: com muitas máquinas, cada grupo vira uma linha de resumo (quantas máquinas, quantas online e offline, latência média). Clique para abrir.
 - **Busca rápida** com `Ctrl+K` para achar qualquer conexão, agente ou ação.
 - **Ditado por voz**: clique no microfone e fale; o texto vai para o terminal.
@@ -134,7 +135,8 @@ Em <b>Ajustes › Exportar</b> você gera um backup <code>.json</code>. No outro
 
 | Versão | Data | Novidades |
 |---|---|---|
-| **1.9.2 beta** | 28/10/2026 | Atalhos como Alt+Tab e a tecla Windows são enviados à sessão RDP com foco também em modo janela. |
+| **1.9.3 beta** | 28/10/2026 | Criar grupos vazios, renomear grupos e escolher suas conexões no mesmo formulário. |
+| 1.9.2 beta | 28/10/2026 | Atalhos como Alt+Tab e a tecla Windows são enviados à sessão RDP com foco também em modo janela. |
 | 1.9.1 beta | 21/10/2026 | A barra de cima mostra o mesmo ícone da barra de tarefas. A aba selecionada ganhou um destaque arredondado. A atualização pelo app reabre o Ponte na versão nova. |
 | 1.9.0 beta | 21/10/2026 | O app avisa quando sai versão nova e atualiza com um clique. Correção do botão de abrir nos cards do Quadro. |
 | 1.8.0 beta | 21/10/2026 | Grupos recolhíveis na lista e no painel Rede, com resumo de máquinas, online, offline e latência média. |
@@ -151,6 +153,8 @@ git clone https://github.com/tenk-rgb/ponte.git
 cd ponte
 .\build.ps1          # gera artifacts\Ponte-Setup-<versão>.exe
 ```
+
+Para verificar a gestão de grupos: `dotnet run --project tests/Ponte.Groups.Tests -c Release`.
 
 Para rodar sem instalar: `dotnet run --project src\Ponte`.
 

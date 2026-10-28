@@ -47,6 +47,8 @@ jobs:
           if (-not (Test-Path "docs/releases/$tag.md")) { throw "Missing release notes for $tag" }
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
+      - name: Check group management
+        run: dotnet run --project tests/Ponte.Groups.Tests -c Release
       - name: Build self-contained installer
         run: ./build.ps1
       - name: Check application version and prepare updater asset

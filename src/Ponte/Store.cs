@@ -26,12 +26,14 @@ public sealed class Store
             File.Copy(FilePath, FilePath + ".broken", overwrite: true);
             Data = new();
         }
+        ConnectionGroups.Normalize(Data);
     }
 
     public void Save()
     {
         lock (_lock)
         {
+            ConnectionGroups.Normalize(Data);
             var tmp = FilePath + ".tmp";
             File.WriteAllText(tmp, JsonSerializer.Serialize(Data, Json));
             File.Move(tmp, FilePath, overwrite: true);

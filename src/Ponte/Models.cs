@@ -36,6 +36,7 @@ public sealed class Agent
 
 public sealed class AppData
 {
+    public List<string> Groups { get; set; } = [];
     public List<Connection> Connections { get; set; } = [];
     public List<Agent> Agents { get; set; } = [];
     public Dictionary<string, string> KnownHosts { get; set; } = [];
