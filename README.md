@@ -86,6 +86,8 @@ Para atualizar: a partir da 1.9.0 o próprio Ponte avisa quando sai uma versão 
 
 ## Atalhos de teclado
 
+Nas conexões **RDP**, clique dentro da tela remota para enviar atalhos como `Alt+Tab` e a tecla `Windows` ao computador remoto, mesmo com o Ponte em janela. Clique fora da tela remota para voltar a usar os atalhos no seu computador.
+
 | Atalho | Ação |
 |---|---|
 | `Ctrl+K` | Buscar conexão, agente ou ação |

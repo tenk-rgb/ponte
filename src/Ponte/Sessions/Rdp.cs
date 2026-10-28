@@ -68,6 +68,10 @@ public sealed class RdpSession : Session
         ocx.DesktopHeight = Math.Max(480, bounds.Height);
         ocx.ColorDepth = 32;
 
+        // Route Windows shortcuts (Alt+Tab, Windows key, etc.) to the focused remote
+        // desktop even in windowed mode. This must be set before Connect().
+        ocx.SecuredSettings2.KeyboardHookMode = 1;
+
         var adv = ocx.AdvancedSettings9;
         adv.RDPPort = port;
         adv.EnableCredSspSupport = true;
