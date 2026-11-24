@@ -7,12 +7,12 @@
 Suas máquinas Windows e Linux e seus agentes de IA num app só.<br>
 Área de trabalho remota, terminal e arquivos na mesma conexão, sem barra lateral ocupando a tela.
 
-![Versão](https://img.shields.io/badge/versão-1.9.3-0a5fe6?style=flat-square)
+![Versão](https://img.shields.io/badge/versão-1.9.4-0a5fe6?style=flat-square)
 ![Beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)
 ![Windows](https://img.shields.io/badge/Windows-10%20e%2011%20·%2064%20bits-16181c?style=flat-square)
 ![Licença](https://img.shields.io/badge/licença-MIT-16181c?style=flat-square)
 
-<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.3-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
+<a href="https://github.com/tenk-rgb/ponte/releases/download/v1.9.4-beta/Ponte-Setup.exe"><img src="docs/baixar-windows.svg" alt="Baixar para Windows" height="64"></a>
 &nbsp;
 <a href="https://github.com/tenk-rgb/ponte/releases"><img src="docs/todas-versoes.svg" alt="Todas as versões" height="64"></a>
 
@@ -76,6 +76,7 @@ Para atualizar: a partir da 1.9.0 o próprio Ponte avisa quando sai uma versão 
 - **Painel Rede**, que mostra quais máquinas estão respondendo e em quantos milissegundos.
 - **Criar e editar grupos**: use **Novo grupo** no Início ou **Nova › Grupo**. O lápis ao lado do nome permite renomear e escolher as conexões do grupo. Grupos vazios ficam salvos e entram no backup. Desmarcar uma conexão a coloca em **Sem grupo**, sem apagar a conexão ou sua senha.
 - **Grupos recolhíveis**: com muitas máquinas, cada grupo vira uma linha de resumo (quantas máquinas, quantas online e offline, latência média). Clique para abrir.
+- **Editar uma conexão de qualquer lugar**: o lápis aparece na lista, nos Recentes, no painel Rede, no Quadro e na própria aba aberta (botão **Editar** ou `Ctrl+Shift+E`). Clique com o botão direito em qualquer conexão ou aba para editar, ou busque "editar" no `Ctrl+K`. Se a aba estiver aberta, **Salvar e conectar** reconecta já com os dados novos.
 - **Busca rápida** com `Ctrl+K` para achar qualquer conexão, agente ou ação.
 - **Ditado por voz**: clique no microfone e fale; o texto vai para o terminal.
 - **Backup**: exporte e importe todas as conexões e agentes em **Ajustes**.
@@ -97,6 +98,7 @@ Nas conexões **RDP**, clique dentro da tela remota para enviar atalhos como `Al
 | `Ctrl+3` em diante | Ir para cada aba aberta |
 | `Ctrl+Tab` | Próxima aba |
 | `Ctrl+Shift+W` | Fechar a aba atual |
+| `Ctrl+Shift+E` | Editar a conexão da aba atual |
 | `Ctrl` + roda do mouse | Afastar ou aproximar o Quadro |
 
 ## Perguntas frequentes
@@ -135,7 +137,8 @@ Em <b>Ajustes › Exportar</b> você gera um backup <code>.json</code>. No outro
 
 | Versão | Data | Novidades |
 |---|---|---|
-| **1.9.3 beta** | 28/10/2026 | Criar grupos vazios, renomear grupos e escolher suas conexões no mesmo formulário. |
+| **1.9.4 beta** | 24/11/2026 | Editar conexões de qualquer lugar: lápis nos Recentes, no painel Rede, no Quadro e na aba aberta, clique direito, busca e `Ctrl+Shift+E`. Salvar e conectar reconecta com os dados novos. |
+| 1.9.3 beta | 28/10/2026 | Criar grupos vazios, renomear grupos e escolher suas conexões no mesmo formulário. |
 | 1.9.2 beta | 28/10/2026 | Atalhos como Alt+Tab e a tecla Windows são enviados à sessão RDP com foco também em modo janela. |
 | 1.9.1 beta | 21/10/2026 | A barra de cima mostra o mesmo ícone da barra de tarefas. A aba selecionada ganhou um destaque arredondado. A atualização pelo app reabre o Ponte na versão nova. |
 | 1.9.0 beta | 21/10/2026 | O app avisa quando sai versão nova e atualiza com um clique. Correção do botão de abrir nos cards do Quadro. |

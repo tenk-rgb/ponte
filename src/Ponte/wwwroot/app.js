@@ -176,6 +176,7 @@ function renderTabs() {
       class: 'tab' + (route === ws.id ? ' active' : ''), title: `${ws.title} (Ctrl+${i + 3})`,
       onclick: () => go(ws.id),
       onauxclick: e => { if (e.button === 1) closeWs(ws); },
+      oncontextmenu: ws.connId ? editOnRightClick(ws.connId) : null,
     },
       h('span', { class: 'dot' + (running ? ' live' : ''), style: { '--c': ws.color || '' } }),
       h('span', { class: 'name' }, ws.title),
@@ -301,14 +302,17 @@ function reachRow(c) {
   const known = reach.has(c.id);
   const up = isUp(c.id);
   const pct = up ? Math.max(6, Math.round(100 - Math.min(ms, 1000) / 10)) : 0;
-  return h('button', {
-    class: 'reach-row ' + (up ? 'on' : known ? 'off' : ''), onclick: () => openConn(c.id),
+  return h('div', {
+    class: 'reach-row ' + (up ? 'on' : known ? 'off' : ''), tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
+    onclick: () => openConn(c.id), oncontextmenu: editOnRightClick(c.id),
+    onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
     title: up ? `${c.name} respondeu em ${ms} ms` : known ? `${c.name} não respondeu` : `${c.name}, ainda verificando`,
   },
     icon(machineIcon(c), 18),
     h('span', { class: 'name' }, c.name),
     h('span', { class: 'bar' }, h('i', { style: { '--w': pct + '%' } })),
-    h('span', { class: 'ms' }, up ? `${ms} ms` : known ? 'sem resposta' : '…'));
+    h('span', { class: 'ms' }, up ? `${ms} ms` : known ? 'sem resposta' : '…'),
+    editConnBtn(c, { size: 14 }));
 }
 
 const byReach = (a, b) => {
@@ -439,9 +443,23 @@ function connActions(c, small = true) {
   const out = [];
   if (hasDesktop(c)) out.push(b('screen', 'Tela', 'desktop'));
   if (hasShell(c)) out.push(b('term', 'Terminal', 'term'), b('folder', 'Arquivos', 'files'));
-  out.push(h('button', { class: 'btn ghost icon small', title: 'Editar', 'aria-label': `Editar ${c.name}`, onclick: e => { e.stopPropagation(); editConnection(c); } }, icon('edit', 16)));
+  out.push(editConnBtn(c));
   return out;
 }
+
+// Every place that shows a saved connection offers the same pencil, and right-click opens the same form.
+const editConnById = id => { const c = conn(id); if (c) editConnection(c); };
+
+function editConnBtn(c, { size = 16, label = false } = {}) {
+  return h('button', {
+    type: 'button', class: `btn ghost${label ? '' : ' icon'} small edit-conn`, title: 'Editar conexão (Ctrl+Shift+E na aba aberta)',
+    'aria-label': `Editar ${c.name}`,
+    onclick: e => { e.stopPropagation(); editConnById(c.id); },
+    onkeydown: e => e.stopPropagation(),
+  }, icon('edit', size), label ? 'Editar' : null);
+}
+
+const editOnRightClick = id => e => { e.preventDefault(); e.stopPropagation(); editConnById(id); };
 
 function renderHome() {
   if (!homeBuilt) buildHome();
@@ -464,8 +482,12 @@ function renderHome() {
   if (!q && recent.length) {
     out.push(h('section', { class: 'section' },
       h('div', { class: 'section-head' }, h('h2', null, 'Recentes')),
-      h('div', { class: 'recents' }, recent.map(c => h('button', { class: 'recent', onclick: () => openConn(c.id) },
-        h('div', { class: 'top' }, stateMark(c), c.os === 'windows' ? 'Windows' : 'Linux', h('span', { style: { marginLeft: 'auto' } }, timeAgo(c.lastUsed))),
+      h('div', { class: 'recents' }, recent.map(c => h('div', {
+        class: 'recent', tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
+        onclick: () => openConn(c.id), oncontextmenu: editOnRightClick(c.id),
+        onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
+      },
+        h('div', { class: 'top' }, stateMark(c), c.os === 'windows' ? 'Windows' : 'Linux', h('span', { style: { marginLeft: 'auto' } }, timeAgo(c.lastUsed)), editConnBtn(c, { size: 14 })),
         h('div', { class: 'name' }, c.name),
         h('div', { class: 'sub' }, c.user ? `${c.user}@${c.host}` : c.host),
         h('div', { class: 'go' }, hasDesktop(c) ? icon('screen', 16) : icon('terminal', 16), hasDesktop(c) ? 'Abrir a tela' : 'Abrir o terminal'))))));
@@ -517,7 +539,8 @@ function renderHome() {
       }
       body.push(h('div', { class: 'rows' }, items.map(c => h('div', {
         class: 'row', tabindex: 0, role: 'button', 'aria-label': `Conectar a ${c.name}`,
-        onclick: () => openConn(c.id), onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
+        onclick: () => openConn(c.id), oncontextmenu: editOnRightClick(c.id),
+        onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) openConn(c.id); },
       },
         stateMark(c),
         h('div', { class: 'who' }, h('span', { class: 'name' }, c.name), h('span', { class: 'sub' }, c.user ? `${c.user}@${c.host}` : c.host)),
@@ -579,6 +602,7 @@ function createConnWs(c) {
       views.length > 1 ? ws.seg : null,
       h('span', { class: 'spacer' }),
       ws.reconnectBtn,
+      editConnBtn(c, { size: 14, label: true }),
       h('button', { class: 'btn small ghost', onclick: () => closeWs(ws), title: 'Fecha tudo desta conexão (Ctrl+Shift+W)' }, icon('power', 14), 'Desconectar')),
     h('div', { class: 'ws-body' }, Object.values(ws.panes)));
   $('#views').append(ws.el);
@@ -1138,9 +1162,14 @@ function renderBoard() {
     items.length ? zoom : null);
 
   if (!items.length) {
-    const cards = open.map((o, i) => h('button', { class: 'launch-card', style: { '--i': i }, onclick: o.run },
+    const cards = open.map((o, i) => h('div', {
+      class: 'launch-card' + (o.kind === 'conn' ? ' has-edit' : ''), style: { '--i': i }, tabindex: 0, role: 'button', 'aria-label': `Abrir ${o.name}`,
+      onclick: o.run, oncontextmenu: o.kind === 'conn' ? editOnRightClick(o.id) : null,
+      onkeydown: e => { if (e.key === 'Enter' && e.target === e.currentTarget) o.run(); },
+    },
       h('span', { class: 'ic' }, icon(o.ic, 22)),
       h('span', null, h('b', null, o.name), h('small', null, o.sub)),
+      o.kind === 'conn' ? editConnBtn(conn(o.id)) : null,
       h('span', { class: 'go' }, icon('play', 16))));
     root.replaceChildren(head, h('div', { class: 'board-empty' },
       h('p', null, open.length ? 'Escolha o que abrir. Dá para abrir vários e acompanhar todos de uma vez.' : 'Salve uma conexão ou um agente no Início para montar o quadro.'),
@@ -1151,7 +1180,10 @@ function renderBoard() {
 
   const launch = open.length ? h('div', { class: 'launch' },
     h('span', { class: 'lbl' }, 'Abrir também'),
-    open.map(o => h('button', { class: 'chip-l', onclick: o.run, title: o.sub },
+    open.map(o => h('button', {
+      class: 'chip-l', onclick: o.run, title: o.kind === 'conn' ? `${o.sub}. Clique com o botão direito para editar.` : o.sub,
+      oncontextmenu: o.kind === 'conn' ? editOnRightClick(o.id) : null,
+    },
       o.kind === 'conn' ? h('span', { class: 'led' + (o.on ? ' on' : '') }) : icon('bot', 14), o.name))) : null;
 
   const rows = Math.ceil(items.length / boardCols);
@@ -1171,6 +1203,7 @@ function renderBoard() {
         h('span', { class: 'spacer' }),
         it.kind === 'term' && !ended ? sparkline(it.sid) : null,
         it.kind === 'term' ? h('span', { class: 'ago' + (last && Date.now() - last < 3000 ? ' now' : ''), 'data-ago': it.sid }, ended ? 'encerrado' : agoShort(last)) : null,
+        c ? editConnBtn(c, { size: 14 }) : null,
         h('button', { class: 'btn icon ghost small', title: 'Assumir em tela cheia', onclick: takeOver }, icon('maximize', 14)),
         h('button', { class: 'btn icon ghost small', title: 'Fechar', onclick: () => closeWs(it.ws) }, icon('x', 14))),
       body));
@@ -1416,7 +1449,19 @@ function editConnection(existing, prefill) {
       close();
       // reopen tabs with the new settings next time
       const ws = workspaces.find(w => w.connId === id);
-      if (ws && existing) toast('Salvo. Feche e abra a aba para usar as mudanças.');
+      if (ws && existing && connect) {
+        // the open tab still uses the old address/user/ports: reopen it so "Salvar e conectar" means it
+        const view = ws.active;
+        closeWs(ws);
+        setTimeout(() => openConn(id, view), 50);
+        return;
+      }
+      if (ws && existing) {
+        toast('Salvo. A aba aberta ainda usa os dados antigos.', {
+          action: 'Reconectar', ms: 8000,
+          onAction: () => { const w = workspaces.find(x => x.connId === id); const view = w?.active; if (w) closeWs(w); setTimeout(() => openConn(id, view), 50); },
+        });
+      }
       if (connect) setTimeout(() => openConn(id), 50);
     } catch (err) { toast(err.message, { error: true }); }
   };
@@ -1606,6 +1651,7 @@ function palette() {
 
   const all = () => [
     ...S.connections.map(c => ({ ic: machineIcon(c), title: c.name, sub: c.host, keys: `${c.name} ${c.host} ${c.group} ${c.user}`, run: () => openConn(c.id) })),
+    ...S.connections.map(c => ({ ic: 'edit', title: `Editar ${c.name}`, sub: c.host, keys: `editar alterar mudar configurar senha ${c.name} ${c.host} ${c.user}`, run: () => editConnById(c.id) })),
     ...S.connections.filter(hasShell).map(c => ({ ic: 'folder', title: `Arquivos de ${c.name}`, sub: c.host, keys: `arquivos files sftp ${c.name} ${c.host}`, run: () => openConn(c.id, 'files') })),
     ...S.agents.map(a => ({ ic: 'bot', title: a.name, sub: a.command, keys: `agente ${a.name} ${a.command}`, run: () => openAgent(a.id) })),
     ...workspaces.map(ws => ({ ic: 'enter', title: `Ir para ${ws.title}`, sub: 'aba aberta', keys: `aba ${ws.title}`, run: () => go(ws.id) })),
@@ -1666,6 +1712,7 @@ function globalShortcut(e) {
   const inTerm = e.target?.classList?.contains('xterm-helper-textarea');
   if (e.ctrlKey && k === 'k' && (!inTerm || e.shiftKey)) { palette(); return true; }
   if (e.ctrlKey && e.shiftKey && k === 'w') { const ws = workspaces.find(w => w.id === route); if (ws) closeWs(ws); return true; }
+  if (e.ctrlKey && e.shiftKey && k === 'e') { const ws = workspaces.find(w => w.id === route); if (ws?.connId) { editConnById(ws.connId); return true; } }
   if (e.ctrlKey && k === 'tab') {
     const order = ['home', 'board', ...workspaces.map(w => w.id)];
     const i = order.indexOf(route);

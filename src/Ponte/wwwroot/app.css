@@ -292,7 +292,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .panel-head .hint { color: var(--tinta-3); font-size: 12px; margin-left: auto; }
 .reach { display: flex; flex-direction: column; }
 .reach-row {
-  display: grid; grid-template-columns: 20px minmax(0, 1fr) 56px 92px; align-items: center; gap: 12px;
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) 44px 88px 28px; align-items: center; gap: 10px;
   min-height: 44px; padding: 0 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; border: 0; background: none; color: inherit; text-align: left;
   transition: background-color .12s var(--sai);
 }
@@ -409,7 +409,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .chip-l .led.on { background: var(--sinal); opacity: 1; }
 
 /* empty board: the launcher grows into cards */
-.launch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.launch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 .launch-card {
   display: grid; grid-template-columns: 40px minmax(0, 1fr) 32px; align-items: center; gap: 12px; padding: 14px 24px 14px 16px; border: 0; text-align: left; color: inherit; cursor: pointer;
   background: var(--placa);
@@ -418,6 +418,7 @@ main { flex: 1; min-height: 0; position: relative; }
   animation: rise .32s var(--sai) both; animation-delay: calc(var(--i, 0) * 40ms);
 }
 .launch-card:hover { background: var(--placa-alta); }
+.launch-card.has-edit { grid-template-columns: 40px minmax(0, 1fr) 32px 32px; gap: 8px 12px; }
 .launch-card:active { transform: scale(.98); }
 .launch-card .ic { color: var(--tinta-2); width: 40px; height: 40px; display: grid; place-items: center; background: var(--fundo-inset); border-radius: 8px; }
 .launch-card b { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -620,3 +621,10 @@ details.more > div { display: flex; flex-direction: column; gap: 16px; margin-to
 .xterm .xterm-viewport { scrollbar-width: thin; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--linha-forte); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+
+/* pencil to edit a connection, shown wherever a connection appears */
+.edit-conn { color: var(--tinta-3); flex: none; }
+.edit-conn:hover, .edit-conn:focus-visible { color: var(--acento); }
+.recent .top .edit-conn, .reach-row .edit-conn { width: 28px; height: 28px; margin: -6px -6px -6px 0; }
+.reach-row .edit-conn { margin: 0; }
+.ws-bar .edit-conn { color: var(--tinta-2); }
